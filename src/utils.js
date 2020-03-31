@@ -18,3 +18,35 @@ export function debounce(fn, delay) {
         }, delay);
     };
 }
+
+/**
+ * 获取样式
+ * @param ele
+ * @returns {*}
+ */
+export function getStyle(ele) {
+    if (window.getComputedStyle) {
+        return window.getComputedStyle(ele, null);
+    }
+    return ele.currentStyle;
+}
+
+/**
+ * 从style中的cssText中获取实际值
+ */
+export function getPropsFromCssText(cssText,prop){
+    const reg1=new RegExp(`${prop}:(.*)`);
+    const reg2=new RegExp(`${prop}:(.*);`)
+    const res1=cssText.match(reg1)
+    const res2=cssText.match(reg2);
+    if(res1){
+        if(res2){
+            return res2[1].trim()
+        }else{
+            return res1[1].trim()
+        }
+    }else{
+        return undefined
+    }
+
+}
