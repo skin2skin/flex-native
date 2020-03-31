@@ -1,0 +1,31 @@
+{
+  "name": "flex-polyfill",
+  "version": "1.0.0",
+  "description": "flex-polyfill",
+  "main": "dist/index.min.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack-dev-server --env development --open --config webpack.dev.js",
+    "build": " webpack --env production --config webpack.prod.js"
+  },
+  "devDependencies": {
+    "clean-webpack-plugin": "^3.0.0",
+    "html-webpack-plugin": "^3.2.0",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.9.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robertpanvip/flex-polyfill.git"
+  },
+  "author": "pan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/robertpanvip/flex-polyfill/issues"
+  },
+  "homepage": "https://github.com/robertpanvip/flex-polyfill#readme"
+}
