@@ -26,10 +26,14 @@
     "type": "git",
     "url": "git+https://github.com/robertpanvip/flex-polyfill.git"
   },
+  "browserslist": "> 5%, ie >= 9, chrome >= 62",
   "author": "pan",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/robertpanvip/flex-polyfill/issues"
   },
-  "homepage": "https://github.com/robertpanvip/flex-polyfill#readme"
+  "homepage": "https://github.com/robertpanvip/flex-polyfill#readme",
+  "dependencies": {
+    "core-js": "^3.6.4"
+  }
 }

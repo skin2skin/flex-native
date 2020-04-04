@@ -1,4 +1,4 @@
-import {getPropsFromCssText, getStyle} from "./utils";
+import {getCss, getDefaultProp, getStyle} from "./utils";
 
 let displayFlexMatch = /(^|;)\s*display\s*:\s*(inline-)?flex\s*(;|$)/i;
 let flexMatch = /^(inline-)?flex$/i;
@@ -11,7 +11,7 @@ function isFlexBox(element) {
     let dataFlexStyle = isElement && element.getAttribute('style');
 
     // whether the element has a current style and -js-display declaration
-    let currentStyleJsDisplay = isElement && element.currentStyle && element.currentStyle['-js-display'];
+    let currentStyleJsDisplay = isElement && (getStyle(element)['-js-display']||getStyle(element)['display']);
 
     // whether flex is detected by the data flex attribute or the current style
     return displayFlexMatch.test(dataFlexStyle) || flexMatch.test(currentStyleJsDisplay);
@@ -31,19 +31,25 @@ export default function readAll(element) {
     let childNode;
 
     if (isDisplayFlex) {
-        const props=getStyle(element);
-
+        let alignSelf;
+        if(isFlexBox(element.parentNode)){
+            const _props = getStyle(element.parentNode);
+            alignSelf=getCss(element.parentNode).alignSelf || getDefaultProp(_props, 'alignSelf')
+        }else{
+            alignSelf='stretch'
+        }
         children.push({
             element,
-            props:{
-                flexDirection:  getPropsFromCssText(element.style.cssText,'flex-direction') || props.flexDirection,
-                flexWrap: getPropsFromCssText(element.style.cssText,'flex-wrap') ||props.flexWrap, //默认不换行
-                alignItems: getPropsFromCssText(element.style.cssText,'align-items') ||props.alignItems,
-                alignContent: getPropsFromCssText(element.style.cssText,'align-content') ||props.alignContent,
-                justifyContent: getPropsFromCssText(element.style.cssText,'justify-content') ||props.justifyContent, //默认左对齐
-                order: getPropsFromCssText(element.style.cssText,'order') ||props.order,
-                flexShrink:getPropsFromCssText(element.style.cssText,'flex-shrink') ||props.flexShrink,
-                flexGrow:getPropsFromCssText(element.style.cssText,'flex-grow')||props.flexGrow
+            props: {
+                flexDirection: getCss(element).flexDirection ,
+                flexWrap: getCss(element).flexWrap, //默认不换行
+                alignItems:getCss(element).alignItems,
+                alignSelf:getCss(element).alignSelf || alignSelf,
+                alignContent: getCss(element).alignContent ,
+                justifyContent:getCss(element).justifyContent, //默认左对齐
+                order: getCss(element).order,
+                flexShrink: getCss(element).flexShrink,
+                flexGrow: getCss(element).flexGrow
             }
         })
     }

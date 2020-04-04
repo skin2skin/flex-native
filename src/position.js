@@ -1,5 +1,8 @@
 //内联元素
-import {getStyle} from "./utils";
+import {
+    createTransform, debounce, getCss, getPrefixAndProp, getStyle,
+    getTransform
+} from "./utils";
 
 const inlineArr = ['a',
     'abbr',
@@ -69,118 +72,158 @@ const FLEX_SHRINK = 1;//定义了项目的缩小比例，默认为1，即如果�
 const FLEX_GROW = 0;//定义项目的放大比例，默认为0，即如果存在剩余空间，也不放大
 
 class Flex {
-
-    state = {
-        wrapperRect: {},
-        childRect: null,
-        flowBoxArr: []
-    };
-
-    constructor(node) {
-        this.initState(node)
+    constructor(params) {
+        this.init(params);
+        this.initState(params)
     }
 
     static defaultProps = {
         flexDirection: FLEX_DIRECTION.ROW,
         flexWrap: FLEX_WRAP.NOWRAP, //默认不换行
+        flexFlow:`${FLEX_DIRECTION.ROW} ${FLEX_WRAP.NOWRAP}`,
         alignItems: ALIGN_ITEMS.FLEX_START,
+        alignSelf: ALIGN_ITEMS.FLEX_START,
         alignContent: ALIGN_CONTENT.STRETCH,
         justifyContent: JUSTIFY_CONTENT.FLEX_START, //默认左对齐
-        order: 1,
+        order: 0,//属性定义项目的排列顺序。数值越小，排列越靠前，默认为0
+        flexGrow: 0,//属性定义项目的放大比例，默认为0，即如果存在剩余空间，也不放大
+        flexShrink: 1 //属性定义了项目的缩小比例，默认为1，即如果空间不足，该项目将缩小
     };
 
-    getProps(style, props) {
-        return style[props] || this.defaultProps[props]
+    init({element, props}) {
+        this.props = props;
+        this.element = element;
+        const {flexDirection,flexWrap} = props;
+        let W = 'width';
+        let H = 'height';
+        let X = 'x';
+        let Y = 'y';
+        let FLEX_START = 'FLEX_START';
+        let FLEX_END = 'FLEX_END'
+        if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
+            W = 'height';
+            H = 'width';
+            X = 'y';
+            Y = 'x';
+        }
+        if(flexWrap===FLEX_WRAP.WRAP_REVERSE){
+            FLEX_START = 'FLEX_END';
+            FLEX_END = 'FLEX_START'
+        }
+        this.W = W;
+        this.H = H;
+        this.X = X;
+        this.Y = Y;
+        this.FLEX_START = FLEX_START;
+        this.FLEX_END = FLEX_END;
+        const fn=debounce((e)=>{
+            console.log('DOMSubtreeModified',e.target.innerHTML)
+        },50);
+        element.addEventListener('DOMSubtreeModified',fn);
     }
 
-    initState(wrapperNode) {
-        let wrapperRect = wrapperNode.getBoundingClientRect();
-        const wrapperStyle = getStyle(wrapperNode);
+    initState({element, props}) {
+        let wrapperRect = element.getBoundingClientRect();
+
+        const wrapperStyle = getStyle(element);
         wrapperRect = {
             left: wrapperRect.left + parseInt(wrapperStyle.paddingLeft),
             top: wrapperRect.top + parseInt(wrapperStyle.paddingTop),
             width: wrapperRect.width - parseInt(wrapperStyle.paddingLeft) - parseInt(wrapperStyle.paddingRight) - parseInt(wrapperStyle.borderLeftWidth) - parseInt(wrapperStyle.borderRightWidth),
             height: wrapperRect.height - parseInt(wrapperStyle.paddingTop) - parseInt(wrapperStyle.paddingBottom) - parseInt(wrapperStyle.borderTopWidth) - parseInt(wrapperStyle.borderBottomWidth)
         };
-        const childNodes = wrapperNode.childNodes;
-        const oriNodes = childNodes[0].childNodes;
-        const ast = this.getChildren(wrapperNode, this.getProps(wrapperStyle, 'flexWrap'));
-
-        {
-            const remakePos = Array.from(oriNodes).map((node, index) => {
-                const obj = node.getBoundingClientRect();
-                const style = getStyle(node);
-                //排除掉fixed等影响布局的
-                const isFixed = !!(style.position === 'absolute' || style.position === 'fixed');
-                if (isFixed) {
-                    return {
-                        isFixed,
-                        props: {},
-                        borderLeftWidth: 0,
-                        borderRightWidth: 0,
-                        marginLeft: 0,
-                        marginRight: 0,
-                        oriHeight: 0,
-                        oriWidth: 0,
-                        width: 0,
-                        height: 0,
-                        x: 0,
-                        y: 0,
-                    }
-                }
+        this.height = wrapperRect.height;
+        this.width = wrapperRect.width;
+        this.wrapperRect = wrapperRect;
+        this.style = wrapperStyle;
+        const childAst = this.getChildren();
+        this.children = childAst;
+        const remakePos = Array.from(childAst.map(item => item.element)).map((node, index) => {
+            const obj = node.getBoundingClientRect();
+            const style = getStyle(node);
+            //排除掉fixed等影响布局的
+            const isFixed = !!(style.position === 'absolute' || style.position === 'fixed');
+            if (isFixed) {
                 return {
                     isFixed,
-                    props: ast[index].props,
-                    borderLeftWidth: parseInt(style.borderLeftWidth),
-                    borderRightWidth: parseInt(style.borderRightWidth),
-                    marginLeft: parseInt(style.marginLeft),
-                    marginRight: parseInt(style.marginRight),
-                    oriHeight: obj.height - parseInt(style.borderTopWidth) - parseInt(style.borderBottomWidth),
-                    oriWidth: obj.width - parseInt(style.borderLeftWidth) - parseInt(style.borderRightWidth),
-                    width: obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight),
-                    height: obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom),
-                    x: -(obj.left - parseInt(style.marginLeft) - parseInt(wrapperStyle.borderLeftWidth) - wrapperRect.left),
-                    y: -(obj.top - parseInt(style.marginTop) - parseInt(wrapperStyle.borderLeftWidth) - wrapperRect.top),
+                    props: {},
+                    borderLeftWidth: 0,
+                    borderRightWidth: 0,
+                    marginLeft: 0,
+                    marginRight: 0,
+                    width: 0,
+                    height: 0,
+                    x: 0,
+                    y: 0,
                 }
+            }
+            const _transform = getTransform(node);
+
+            return {
+                element: node,
+                isFixed,
+                props: childAst[index].props,
+                borderLeftWidth: parseInt(style.borderLeftWidth),
+                borderRightWidth: parseInt(style.borderRightWidth),
+                marginLeft: parseInt(style.marginLeft),
+                marginRight: parseInt(style.marginRight),
+                width: obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight),
+                height: obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom),
+                x: _transform.x - (obj.left - parseInt(style.marginLeft) - parseInt(wrapperStyle.borderLeftWidth) - wrapperRect.left),
+                y: _transform.y - (obj.top - parseInt(style.marginTop) - parseInt(wrapperStyle.borderLeftWidth) - wrapperRect.top),
+            }
+        }).filter((item) => !item.isFixed);
+        const flowBox = this.createFlowBox(remakePos,wrapperStyle);
+        console.log('flowBox', flowBox)
+        const box = this.startLayout(flowBox);
+
+        remakePos.forEach((it, index) => {
+            const item = Flex.findByIndex(box.array, index);
+            const {element} = item;
+            element.style[getPrefixAndProp('transform')] = createTransform(item);
+            element.style[this.W]=item[this.W]+item.withOffset+'px'
+        });
+    }
+
+    getStretchMax(item) {
+        const {H} = this;
+        return Math.max(...item.filter(item => !item.isFixed).map(a => a[H]))
+
+    }
+
+    getFlowArr(remakePos, wrapperStyle) {
+        const {flexDirection, flexWrap} = this.props;
+        const {W, X} = this;
+        let arr = [];
+        if (flexWrap === FLEX_WRAP.NOWRAP) {
+            const lineArrayWidth = remakePos.reduce((al, item) => al + item[W], 0);
+            const restWidth = this[W]- lineArrayWidth;
+            let flexGrowArr = remakePos.map(item =>Number(item.props.flexGrow));
+            const allRateGrow = flexGrowArr.reduce((a, b) => a + b, 0);
+            let flexShrinkWidth = remakePos.reduce((al, item) => {
+                let itemShrink=Number(item.props.flexShrink);
+                return al + item[W] * itemShrink
+            }, 0);
+            remakePos=remakePos.map(item=>{
+                let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth,allRateGrow, flexShrinkWidth);
+                item.withOffset=-item.borderLeftWidth-item.borderRightWidth-item.marginLeft-item.marginRight;
+                item.withOffset2=needAdd;
+                return item;
             });
 
-            console.log('init---pos', wrapperStyle.height)
-            const box = this.createFlowBox(remakePos, wrapperRect, wrapperStyle);
-            wrapperRect.height = box.height;
-            console.log('init---', box)
-        }
-    }
-
-    getStretchMax(item, arr, wrapperRect, wrapperStyle) {
-        const {flexDirection, alignContent} = this.props;
-        let H = 'height';
-        if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
-            H = 'width'
-        }
-        console.log('wrapperStyle.height', wrapperStyle.height)
-        if (alignContent === ALIGN_CONTENT.STRETCH) {
-            if (parseInt(wrapperStyle.height) === 0) {
-                return Math.max(...item.filter(item => !item.isFixed).map(a => a[H]))
-            }
-            return wrapperRect[H] / arr.length
-        } else {
-            return Math.max(...item.filter(item => !item.isFixed).map(a => a[H]))
-        }
-
-    }
-
-    getFlowArr(remakePos, wrapperRect, wrapperStyle) {
-        const {flexDirection, flexWrap} = this.props;
-        let W = 'width';
-        let X = 'x';
-        let Y = 'y';
-        if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
-            W = 'height';
-            X = 'y';
-            Y = 'x'
-        }
-        const arr = [];
-        if (flexWrap === FLEX_WRAP.NOWRAP) {
+            remakePos=remakePos.map((item,index)=>{
+                item[W]=item[W]+item.withOffset2;
+                //由于Y轴本身就是流动的 会影响布局 所以给加上之前的withOffset2
+                if(flexDirection.includes('column')){
+                    if(index!==0){
+                        const pre=remakePos.filter((it,ind)=>ind<index).reduce((al,b)=>{
+                            return al+b.withOffset2
+                        },0);
+                        item[X]=item[X]-pre;
+                    }
+                }
+                return item;
+            });
             arr.push(remakePos)
         } else {
             let sliceIndex = 0;
@@ -188,8 +231,8 @@ class Flex {
             remakePos.reduce((al, item, it) => {
                 let res = al + item[W];
                 if (it !== 0) {
-                    if (al && (al + item[W]) > (wrapperRect[W]) * line) {
-                        res = wrapperRect[W] * line + item[W];
+                    if (al && (al + item[W]) > (this[W]) * line) {
+                        res = this[W] * line + item[W];
                         arr.push(remakePos.slice(sliceIndex, it))
                         sliceIndex = it;
                         line = line + 1;
@@ -202,126 +245,33 @@ class Flex {
             }, 0);
         }
 
+        if (flexWrap === FLEX_WRAP.WRAP_REVERSE) {
+            arr = arr.reverse()
+        }
+
         if (parseInt(wrapperStyle.height) === 0) {
-            wrapperRect.height = arr.reduce((al, b) => {
-                return al + this.getStretchMax(b, arr, wrapperRect, wrapperStyle)
+            this.height = arr.reduce((al, b) => {
+                return al + this.getStretchMax(b)
             }, 0);
         }
 
 
         return arr.map((item) => {
-            const res = {
-                rect: item,
-                max: this.getStretchMax(item, arr, wrapperRect, wrapperStyle),
-                rectPos: item.map((_item, _index) => {
+            const lineArrayWidth=item.reduce((al, item) => al + item[W], 0);
+            return {
+                max: this.getStretchMax(item),
+                lineArray: item.map((_item, _index) => {
                     if (flexDirection.includes('reverse')) {
-                        const behindWidth = item.filter((a, b) => b >= _index).reduce((a, b) => a + b[W], 0);
-                        _item[X] += wrapperRect[W] - behindWidth
+                        _item[X] += this[W] - item.filter((a, b) => b <= _index).reduce((a, b) => a + b[W], 0);
                     } else {
                         _item[X] += item.filter((a, b) => b < _index).reduce((a, b) => a + b[W], 0);
                     }
                     return _item
-                })
+                }),
+                lineArrayWidth,
+                restWidth: this[W] - lineArrayWidth
             };
-            res.rectPos = this.setShrinkAndGrow(res.rectPos, wrapperRect)
-            return res;
         });
-    }
-
-    /**
-     * 根据flex—shrink 和flex-grow 设置 高度和位置
-     * @param arr
-     * @param wrapperRect
-     * @returns {*}
-     */
-    setShrinkAndGrow(arr, wrapperRect) {
-        const {flexDirection} = this.props;
-        let W = 'width';
-        let OW = 'oriWidth';
-        if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
-            W = 'height';
-            OW = 'oriHeight';
-        }
-        let flexShrinkArr = arr.map(item => {
-            if (item.props) {
-                if (item.props['flexShrink'] !== undefined) {
-                    return Number(item.props['flexShrink'])
-                } else if (item.props['flex-shrink'] !== undefined) {
-                    return Number(item.props['flex-shrink'])
-                } else if (item.props.style && item.props.style['flex-shrink'] !== undefined) {
-                    return Number(item.props.style['flex-shrink'])
-                } else {
-                    return FLEX_SHRINK
-                }
-            } else {
-                return FLEX_SHRINK
-            }
-        });
-        let flexShrinkWidth = arr.reduce((al, item) => {
-            let itemShrink;
-            if (item.props) {
-                if (item.props['flexShrink'] !== undefined) {
-                    itemShrink = Number(item.props['flexShrink'])
-                } else if (item.props['flex-shrink'] !== undefined) {
-                    itemShrink = Number(item.props['flex-shrink'])
-                } else if (item.props.style && item.props.style['flexShrink'] !== undefined) {
-                    itemShrink = Number(item.props.style['flexShrink'])
-                } else {
-                    itemShrink = FLEX_SHRINK
-                }
-            } else {
-                itemShrink = FLEX_SHRINK
-            }
-            return al + item[W] * itemShrink
-        }, 0);
-        console.log(flexShrinkWidth)
-        let flexGrowArr = arr.map(item => {
-            if (item.props) {
-                if (item.props['flexGrow'] !== undefined) {
-                    return Number(item.props['flexGrow'])
-                } else if (item.props['flex-grow'] !== undefined) {
-                    return Number(item.props['flex-grow'])
-                } else if (item.props.style && item.props.style['flexGrow'] !== undefined) {
-                    return Number(item.props.style['flexGrow'])
-                } else {
-                    return FLEX_GROW
-                }
-            } else {
-                return FLEX_GROW
-            }
-        });
-        const allRate = flexShrinkArr.reduce((a, b) => a + b, 0);
-        const allRateGrow = flexGrowArr.reduce((a, b) => a + b, 0);
-
-        const allWidth = arr.reduce((al, item) => {
-            return al + item[W]
-        }, 0);
-
-        //一行剩下的宽度
-        const restWidth = (wrapperRect[W] - allWidth) || 0;
-        arr = arr.map((item, index) => {
-            console.log(restWidth, allWidth)
-            const preArr = arr.filter((item, ind) => ind <= index);
-            const allNeedAdd = preArr.reduce((al, item, it) => {
-                if (it > 0) {
-                    const preItem = preArr[it - 1];
-                    const preAdd = this.getNeedAddWidth(preItem, restWidth, allWidth, wrapperRect, allRate, allRateGrow, flexShrinkWidth);
-                    return al + preAdd
-                } else {
-                    return al;
-                }
-            }, 0);
-
-            let needAdd = this.getNeedAddWidth(item, restWidth, allWidth, wrapperRect, allRate, allRateGrow, flexShrinkWidth);
-            return {
-                ...item,
-                needAdd: needAdd,
-                x: item.x + allNeedAdd
-            }
-        });
-
-        return arr;
-
     }
 
     /**
@@ -329,78 +279,74 @@ class Flex {
      * @param item
      * @param restWidth
      * @param allWidth
-     * @param wrapperRect
-     * @param allRate
      * @param allRateGrow
      * @param flexShrinkWidth
      * @returns {*}
      */
-    getNeedAddWidth(item, restWidth, allWidth, wrapperRect, allRate, allRateGrow, flexShrinkWidth) {
-        const {flexDirection} = this.props;
-        let W = 'width';
-        if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
-            W = 'height';
-        }
-        let grow;
-        if (item.props) {
-            if (item.props['flexGrow'] !== undefined) {
-                grow = Number(item.props['flexGrow'])
-            } else if (item.props['flex-grow'] !== undefined) {
-                grow = Number(item.props['flex-grow'])
-            } else if (item.props.style && item.props.style['flexGrow'] !== undefined) {
-                grow = Number(item.props.style['flexGrow'])
-            } else {
-                grow = FLEX_GROW
-            }
-        } else {
-            return FLEX_GROW
-        }
+    getNeedAddWidth(item, restWidth, allWidth,allRateGrow, flexShrinkWidth) {
 
+        const {W}=this;
+        let grow=Number(item.props['flexGrow']);
         let res;
         //缩小
-        if (allWidth > wrapperRect[W]) {
+        if (allWidth > this[W]) {
             res = (item[W] / flexShrinkWidth) * restWidth
             // 放大
-        } else if (allWidth < wrapperRect[W] && grow) {
+        } else if (allWidth < this[W] && grow) {
             res = restWidth * (grow / allRateGrow)
         } else {
             res = 0;
         }
+        console.log(res)
         return res;
     }
 
-    createFlowBox(remakePos, wrapperRect, wrapperStyle) {
-        let posArr = this.getFlowArr(remakePos, wrapperRect, wrapperStyle);
-        posArr = posArr.map((item, it) => {
+    /**
+     * 创建流动布局的盒子
+     * @param remakePos
+     * @param wrapperStyle
+     * @returns {{height: number|*, array: *}}
+     */
+    createFlowBox(remakePos, wrapperStyle) {
+        const {Y} = this;
+        let posArr = this.getFlowArr(remakePos, wrapperStyle);
+        return posArr.map((item, it) => {
             const getTop = (posArr.filter((a, b) => b <= it - 1).reduce((a, b) => a + b.max, 0));
-            item.rectPos = item.rectPos.map(item => {
-                item.y = item.y + (it === 0 ? 0 : getTop);
+            item.lineArray = item.lineArray.map(item => {
+                item[Y] = item[Y] + (it === 0 ? 0 : getTop);
                 return item;
             });
             return {
                 ...item,
                 top: it === 0 ? 0 : getTop,
             }
-        }).map((item, it) => {
-            item.rectPos = this.setLocation(wrapperRect, item, posArr, it)
+        })
+
+    }
+
+    /**
+     * 开始布局
+     */
+    startLayout(arr) {
+        arr = this.setLineLocation(arr);
+        arr = arr.map((item, it) => {
+            item.lineArray = this.setLineItemLocation(item, arr, it);
             return item
         });
-        console.log(wrapperRect.height)
-
         return {
-            height: wrapperRect.height,
-            array: posArr
+            height: this.height,
+            array: arr
         }
     }
 
-    findByIndex = (arr, index) => {
+    static findByIndex(arr, index) {
         let res = {};
         let ind = 0;
         outer:for (let i = 0; i < arr.length; i++) {
             let item = arr[i];
-            for (let j = 0; j < item.rectPos.length; j++) {
+            for (let j = 0; j < item.lineArray.length; j++) {
                 if (ind === index) {
-                    res = item.rectPos[j];
+                    res = item.lineArray[j];
                     break outer
                 }
                 ind = ind + 1;
@@ -410,185 +356,222 @@ class Flex {
     };
 
     /**
+     * 设置一行的位置
+     * @param arr
+     * @returns {*}
+     */
+    setLineLocation(arr) {
+        const {H, Y,FLEX_START,FLEX_END} = this;
+        console.log('arr----', arr);
+        let {alignContent,flexWrap} = this.props;
+        //alignContent属性定义了多根轴线的对齐方式。如果项目只有一根轴线，该属性不起作用
+        if(flexWrap===FLEX_WRAP.NOWRAP){
+            alignContent=ALIGN_CONTENT.STRETCH
+        }
+        //每一行的最大值加起来
+        const allHeight = arr.reduce((al, item) => {
+            return al + item.max
+        }, 0);
+
+        //定义多根轴线的对齐方式
+        switch (alignContent) {
+            case ALIGN_CONTENT.STRETCH:
+                arr = arr.map((item, index) => {
+
+                    const restHeight = this[H] - allHeight;
+                    const marginTop = restHeight / arr.length;
+                    item.axisHeight = item.max + marginTop;
+                    //得到前面的总的行高度
+                    const marginZero = marginTop * index;
+                    console.log(marginZero)
+                    item.lineArray = item.lineArray.map(rect => ({
+                        ...rect,
+                        [Y]: rect[Y] + marginZero
+                    }));
+                    return item
+                });
+                break;
+            case ALIGN_CONTENT[FLEX_START]:
+                arr = arr.map((item, index) => {
+                    item.axisHeight = item.max;
+                    return item;
+                });
+                break;
+            case ALIGN_CONTENT[FLEX_END]:
+                arr = arr.map((item, index) => {
+                    item.axisHeight = item.max;
+                    item.lineArray = item.lineArray.map(rect => ({
+                        ...rect,
+                        [Y]: rect[Y] + this[H] - allHeight
+                    }));
+                    return item;
+                });
+
+                break;
+            case ALIGN_CONTENT.CENTER:
+                arr = arr.map((item, index) => {
+                    item.axisHeight = item.max;
+                    item.lineArray = item.lineArray.map(rect => ({
+                        ...rect,
+                        [Y]: rect[Y] + (this[H] - allHeight) / 2
+                    }))
+                    return item;
+                });
+                break;
+            case ALIGN_CONTENT.SPACE_AROUND:
+                const gapWidth = (this[H] - allHeight) / (arr.length * 2);
+                arr = arr.map((item, index) => {
+                    item.axisHeight = item.max;
+                    item.lineArray = item.lineArray.map(rect => ({
+                        ...rect,
+                        [Y]: rect[Y] + (index * 2 + 1) * gapWidth
+                    }));
+                    return item;
+                });
+                break;
+            case ALIGN_CONTENT.SPACE_BETWEEN:
+                arr = arr.map((item, index) => {
+                    item.axisHeight = item.max;
+                    if (index === 0) {
+                        item[Y] += 0;
+                    } else if (index === arr.length - 1) {
+                        item.lineArray = item.lineArray.map(rect => ({
+                            ...rect,
+                            [Y]: rect[Y] + this[H] - allHeight
+                        }));
+                    } else {
+                        const gapWidth = (this[H] - allHeight) / (arr.length - 1);
+                        item.lineArray = item.lineArray.map(rect => ({
+                            ...rect,
+                            [Y]: rect[Y] + gapWidth * index
+                        }));
+                    }
+                    return item;
+                });
+                break;
+
+        }
+        return arr;
+    }
+
+    /**
      *
-     * @param wrapperRect
      * @param item
      * @param arr
      * @param index
      * @returns {*}
      */
-    setLocation(wrapperRect, item, arr = [], index) {
-        const {flexDirection, justifyContent, alignItems, alignContent} = this.props
-        let W = 'width';
-        let H = 'height';
-        let X = 'x';
-        let Y = 'y';
-        if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
-            W = 'height';
-            H = 'width';
-            X = 'y';
-            Y = 'x'
-        }
-        const allLength = item.rectPos.reduce((al, b) => al + b[W], 0);
-        let restLength = (wrapperRect[W] - allLength) || 0;
-        if (restLength < 0) restLength = 0; //如果是不换行的情况下超出了
-        const allHeight = arr.reduce((al, item) => {
-            return al + Math.max(...item.rectPos.map(item => item[H]))
-        }, 0);
+    setLineItemLocation(item, arr = [], index) {
+        const {W,H,X, Y,FLEX_START,FLEX_END} = this;
+        const {flexDirection, justifyContent, alignItems} = this.props;
+        console.log('props---------', this.props);
+        const allLength = item.lineArray.reduce((al, b) => al + b[W], 0);
+        let restLength = (this[W] - allLength) || 0;
+        //如果是不换行的情况下没有超出
         //主轴居中
         switch (justifyContent) {
             case JUSTIFY_CONTENT.FLEX_START:
                 break;
             case JUSTIFY_CONTENT.FLEX_END:
-                //todo
-                item.rectPos = item.rectPos.map((rect, index) => {
+                //一行盒子的宽度
+                const lineAllWidth = item.lineArray.reduce((a, b) => {
+                    return a + b[W]
+                }, 0);
+                let needAdd = this[W] - (lineAllWidth);
+                if (flexDirection.includes('reverse')) {
+                    needAdd = -needAdd
+                }
+                item.lineArray = item.lineArray.map(rect => {
                     let res = rect;
-                    item.rectPos.filter((a, b) => b <= index).reduce((a, b) => {
-                        res[X] += wrapperRect[W] - (a + b[W]);
-                        return a + b[W]
-                    }, 0);
+                    res[X] += needAdd;
                     return res
                 }).reverse();
                 break;
             case JUSTIFY_CONTENT.CENTER:
-                //console.log(restLength, index)
-                item.rectPos = item.rectPos.map(rect => ({
+                if (flexDirection.includes('reverse')) {
+                    restLength = -restLength
+                }
+                item.lineArray = item.lineArray.map(rect => ({
                     ...rect,
                     [X]: rect[X] + restLength / 2
                 }));
                 break;
             case JUSTIFY_CONTENT.SPACE_AROUND:
-                item.rectPos = item.rectPos.map((rect, index) => {
-                    const gapWidth = restLength / (item.rectPos.length * 2);
+                if (flexDirection.includes('reverse')) {
+                    restLength = -restLength
+                }
+                item.lineArray = item.lineArray.map((rect, index) => {
+                    const gapWidth = restLength / (item.lineArray.length * 2);
                     rect[X] += (index * 2 + 1) * gapWidth;
                     return rect
                 });
                 break;
             case JUSTIFY_CONTENT.SPACE_BETWEEN:
-                item.rectPos = item.rectPos.map((rect, index) => {
+                if (flexDirection.includes('reverse')) {
+                    restLength = -restLength
+                }
+                item.lineArray = item.lineArray.map((rect, index) => {
                     if (index === 0) {
                         rect[X] = 0;
-                    } else if (index === item.rectPos.length - 1) {
+                    } else if (index === item.lineArray.length - 1) {
                         rect[X] += restLength;
                     } else {
-                        if (item.rectPos.length !== 0) {
-                            let reduceWidth = 0;
-                            for (let i = 1; i < item.rectPos.length - 1; i++) {
-                                reduceWidth += item.rectPos[i][W]
-                            }
-                            const gapWidth = (wrapperRect[W] - item.rectPos[0][W] - item.rectPos[item.rectPos.length - 1][W] - reduceWidth) / (item.rectPos.length - 1);
-                            rect[X] = gapWidth * (index)
+                        if (item.lineArray.length !== 0) {
+                            let reduceWidth = item.lineArray.reduce((al, b) => al + b[W], 0);
+                            const gapWidth = (this[W] - reduceWidth) / (item.lineArray.length - 1);
+                            rect[X] += gapWidth * (index)
                         }
                     }
                     return rect
                 });
                 break;
-        }
-        switch (alignContent) {
-            case ALIGN_CONTENT.STRETCH:
-                break;
-            case ALIGN_CONTENT.FLEX_START:
-                break;
-            case ALIGN_CONTENT.FLEX_END:
-                item.rectPos = item.rectPos.map(rect => ({
-                    ...rect,
-                    [Y]: rect[Y] + wrapperRect[H] - allHeight
-                }));
-                //item.y += wrapperRect[H] - allHeight;
-                break;
-            case ALIGN_CONTENT.CENTER:
-                item.rectPos = item.rectPos.map(rect => ({
-                    ...rect,
-                    [Y]: rect[Y] + (wrapperRect[H] - allHeight) / 2
-                }));
-                //item.y += (wrapperRect[H] - allHeight) / 2
-                break;
-            case ALIGN_CONTENT.SPACE_AROUND:
-                const gapWidth = allHeight / (arr.length * 2);
-                item.rectPos = item.rectPos.map(rect => ({
-                    ...rect,
-                    [Y]: rect[Y] + (index * 2 + 1) * gapWidth
-                }));
-                //item.y += (index * 2 + 1) * gapWidth;
-                break;
-            case ALIGN_CONTENT.SPACE_BETWEEN:
-                if (index === 0) {
-                    item.y += 0;
-                } else if (index === arr.length - 1) {
-                    item.rectPos = item.rectPos.map(rect => ({
-                        ...rect,
-                        [Y]: rect[Y] + wrapperRect[H] - allHeight
-                    }));
-                    //item.y += wrapperRect[H] - allHeight;
-                } else {
-                    const gapWidth = (wrapperRect[H] - allHeight) / (arr.length - 1);
-                    item.rectPos = item.rectPos.map(rect => ({
-                        ...rect,
-                        [Y]: rect[Y] + gapWidth * index
-                    }));
-                    //item.y += gapWidth * index
-                }
-                break;
-
         }
         switch (alignItems) {
-            case ALIGN_ITEMS.FLEX_START:
-                item.rectPos = item.rectPos.map((rect) => {
+            case ALIGN_ITEMS[FLEX_START]:
+                item.lineArray = item.lineArray.map((rect) => {
                     const props = rect.props || {};
-                    if (props['align-self']) {
-                        if (props['align-self'] === ALIGN_ITEMS.FLEX_START) {
-                        } else if (props['align-self'] === ALIGN_ITEMS.FLEX_END) {
-                            rect[Y] += ((item.max || 0) - rect[H])
-                        } else if (props['align-self'] === ALIGN_ITEMS.CENTER) {
-                            rect[Y] += ((item.max || 0) - rect[H]) / 2
-                        } else if (props['align-self'] === ALIGN_ITEMS.STRETCH) {
-                            //todo
-                        } else if (props['align-self'] === ALIGN_ITEMS.BASELINE) {
-                            //todo
-                        }
-                    } else {
-                        rect[Y] += 0;
+                    if (props['alignSelf'] === ALIGN_ITEMS[FLEX_START]) {
+                    } else if (props['alignSelf'] === ALIGN_ITEMS[FLEX_END]) {
+                        rect[Y] += ((item.axisHeight || 0) - rect[H])
+                    } else if (props['alignSelf'] === ALIGN_ITEMS.CENTER) {
+                        rect[Y] += ((item.axisHeight || 0) - rect[H]) / 2
+                    } else if (props['alignSelf'] === ALIGN_ITEMS.STRETCH) {
+                        //todo
+                    } else if (props['alignSelf'] === ALIGN_ITEMS.BASELINE) {
+                        //todo
                     }
-
                     return rect
                 });
                 break;
-            case ALIGN_ITEMS.FLEX_END:
-                item.rectPos = item.rectPos.map((rect) => {
+            case ALIGN_ITEMS[FLEX_END]:
+                item.lineArray = item.lineArray.map((rect) => {
                     const props = rect.props || {};
-                    if (props['align-self']) {
-                        if (props['align-self'] === ALIGN_ITEMS.FLEX_START) {
-                        } else if (props['align-self'] === ALIGN_ITEMS.FLEX_END) {
-                            rect[Y] += ((item.max || 0) - rect[H])
-                        } else if (props['align-self'] === ALIGN_ITEMS.CENTER) {
-                            rect[Y] += ((item.max || 0) - rect[H]) / 2
-                        } else if (props['align-self'] === ALIGN_ITEMS.STRETCH) {
-                            //todo
-                        } else if (props['align-self'] === ALIGN_ITEMS.BASELINE) {
-                            //todo
-                        }
-                    } else {
-                        rect[Y] += ((item.max || 0) - rect[H])
+                    if (props['alignSelf'] === ALIGN_ITEMS[FLEX_START]) {
+                    } else if (props['alignSelf'] === ALIGN_ITEMS[FLEX_END]) {
+                        rect[Y] += ((item.axisHeight || 0) - rect[H])
+                    } else if (props['alignSelf'] === ALIGN_ITEMS.CENTER) {
+                        rect[Y] += ((item.axisHeight || 0) - rect[H]) / 2
+                    } else if (props['alignSelf'] === ALIGN_ITEMS.STRETCH) {
+                        //todo
+                    } else if (props['alignSelf'] === ALIGN_ITEMS.BASELINE) {
+                        //todo
                     }
                     return rect
                 });
                 break;
             case ALIGN_ITEMS.CENTER:
-                item.rectPos = item.rectPos.map((rect) => {
+                item.lineArray = item.lineArray.map((rect) => {
+                    console.log('ppppppppp---------', item.axisHeight)
                     const props = rect.props || {};
-                    if (props['align-self']) {
-                        if (props['align-self'] === ALIGN_ITEMS.FLEX_START) {
-                        } else if (props['align-self'] === ALIGN_ITEMS.FLEX_END) {
-                            rect[Y] += ((item.max || 0) - rect[H])
-                        } else if (props['align-self'] === ALIGN_ITEMS.CENTER) {
-                            rect[Y] += ((item.max || 0) - rect[H]) / 2
-                        } else if (props['align-self'] === ALIGN_ITEMS.STRETCH) {
-                            //todo
-                        } else if (props['align-self'] === ALIGN_ITEMS.BASELINE) {
-                            //todo
-                        }
-                    } else {
-                        rect[Y] += ((item.max || 0) - rect[H]) / 2
+                    if (props['alignSelf'] === ALIGN_ITEMS[FLEX_START]) {
+                    } else if (props['alignSelf'] === ALIGN_ITEMS[FLEX_END]) {
+                        rect[Y] += ((item.axisHeight || 0) - rect[H])
+                    } else if (props['alignSelf'] === ALIGN_ITEMS.CENTER) {
+                        rect[Y] += ((item.axisHeight || 0) - rect[H]) / 2
+                    } else if (props['alignSelf'] === ALIGN_ITEMS.STRETCH) {
+                        //todo
+                    } else if (props['alignSelf'] === ALIGN_ITEMS.BASELINE) {
+                        //todo
                     }
                     return rect
                 });
@@ -601,32 +584,41 @@ class Flex {
         }
 
 
-        return item.rectPos
+
+        return item.lineArray
     }
 
-    createTransform(flowBoxItem) {
-        if (flowBoxItem.x !== undefined) {
-            return `translate(${flowBoxItem.x}px,${flowBoxItem.y}px)`;
-        } else {
-            return undefined
-        }
 
-    }
-
-    getChildren(wrapperNode, flexWrap) {
-        console.log(flexWrap)
-        let childNodes = Array.from(wrapperNode.childNodes);
-        childNodes.forEach(item => {
-            getStyle(item)
-        })
+    getChildren() {
+        const {element} = this;
+        const {flexWrap, flexDirection} = this.props;
+        let childNodes = Array.from(element.childNodes);
+        childNodes = childNodes.map(ele => {
+            const alignItems = getCss(element).alignItems;
+            return {
+                element: ele,
+                props: {
+                    flexDirection: getCss(ele).flexDirection,
+                    flexWrap: getCss(ele).flexWrap,
+                    alignItems,
+                    alignSelf: getCss(ele).alignSelf || alignItems,
+                    alignContent: getCss(ele).alignContent,
+                    justifyContent: getCss(ele).justifyContent,
+                    order: getCss(ele).order,
+                    flexShrink: getCss(ele).flexShrink,
+                    flexGrow: getCss(ele).flexGrow
+                }
+            }
+        });
         childNodes = childNodes.sort((a, b) => {
-            const aOrder = this.getProps(a, 'order');
-            const bOrder = this.getProps(b, 'order');
+            const aOrder = a.props.order;
+            const bOrder = b.props.order;
             return Number(aOrder) - Number(bOrder);
         });
-        if (flexWrap === FLEX_WRAP.WRAP_REVERSE) {
+
+        /*if (flexWrap === FLEX_WRAP.WRAP_REVERSE) {
             childNodes.reverse();
-        }
+        }*/
         return childNodes
     }
 
