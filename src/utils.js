@@ -1,4 +1,4 @@
-import Flex from "./position";
+import Flex from "./flex";
 
 /**
  * 防抖函数
@@ -90,17 +90,26 @@ export function getTransform(element) {
 /**
  * 得到默认属性
  */
-export function getDefaultProp(props, key, spare) {
-    if (!props[key] || props[key] === 'normal' || props[key] === 'auto') {
-        if (key === 'alignSelf') {
-            return null
+export function getDefaultProp(key, props) {
+    if (props) {
+        const _res={};
+        const flexFlow = props[ 'flex-flow']||'';
+        _res.flexFlow = flexFlow.trim().match(/([^ ]*)\s*([^ ]*)/);
+        _res.flexDirection = _res.flexFlow[1].trim();
+        _res.flexWrap = _res.flexFlow[2].trim();
+        let flex = props[ 'flex'] || '';
+        if (flex === 'auto') {
+            flex = '1 1 auto';
         }
-        if(spare){
-            return spare
+        if (flex === 'none') {
+            flex = '0 0 auto';
         }
-        return Flex.defaultProps[key]
+        const _flex = flex.trim().match(/([^ ]*)\s*([^ ]*)\s*([^ ]*)/);
+        _res.flexGrow = _flex[1];
+        _res.flexShrink = _flex[2];
+        return _res[key]
     }
-    return props[key]
+    return Flex.defaultProps[key]
 }
 
 const prefixes = ['Moz', 'Webkit', 'O', 'ms'];
@@ -152,23 +161,22 @@ export function supportsFlexBox() {
 }
 
 export function getCss(element) {
-    let cssText = element.getAttribute('style');
+    let cssText = element.getAttribute ? element.getAttribute('style') : '';
     let style = getStyle(element);
-    const flexFlow=getPropsFromStyleText(cssText, 'flex-flow') || style['flex-flow']||'';
-    const _flexFlow=flexFlow.trim().match(/([^ ]*)\s*([^ ]*)/);
-    const _flexDirection=_flexFlow[1].trim();
-    const _flexWrap=_flexFlow[2].trim();
-    let flex=getPropsFromStyleText(cssText, 'flex') || style['flex']||'';
-    if(flex==='auto'){
-        flex='1 1 auto';
+    const flexFlow = getPropsFromStyleText(cssText, 'flex-flow') || style['flex-flow'] || '';
+    const _flexFlow = flexFlow.trim().match(/([^ ]*)\s*([^ ]*)/);
+    const _flexDirection = _flexFlow[1].trim();
+    const _flexWrap = _flexFlow[2].trim();
+    let flex = getPropsFromStyleText(cssText, 'flex') || style['flex'] || '';
+    if (flex === 'auto') {
+        flex = '1 1 auto';
     }
-    if(flex==='none'){
-        flex='0 0 auto';
+    if (flex === 'none') {
+        flex = '0 0 auto';
     }
-    const _flex=flex.trim().match(/([^ ]*)\s*([^ ]*)\s*([^ ]*)/);
-    let _flexGrow=_flex[1];
-    let _flexShrink=_flex[2];
-
+    const _flex = flex.trim().match(/([^ ]*)\s*([^ ]*)\s*([^ ]*)/);
+    let _flexGrow = _flex[1];
+    let _flexShrink = _flex[2];
 
 
     let styleProps = {
@@ -183,17 +191,139 @@ export function getCss(element) {
         flexGrow: getPropsFromStyleText(cssText, 'flex-grow') || style['flex-grow']
     };
     styleProps = {
-        flexDirection: getDefaultProp(styleProps, 'flexDirection',_flexDirection),
-        flexWrap: getDefaultProp(styleProps, 'flexWrap',_flexWrap), //默认不换行
+        flexDirection: getDefaultProp(styleProps, 'flexDirection', _flexDirection),
+        flexWrap: getDefaultProp(styleProps, 'flexWrap', _flexWrap), //默认不换行
         alignItems: getDefaultProp(styleProps, 'alignItems'),
         alignSelf: getDefaultProp(styleProps, 'alignSelf'),
         alignContent: getDefaultProp(styleProps, 'alignContent'),
         justifyContent: getDefaultProp(styleProps, 'justifyContent'), //默认左对齐
         order: getDefaultProp(styleProps, 'order'),
-        flexShrink: getDefaultProp(styleProps, 'flexShrink',_flexShrink),
-        flexGrow: getDefaultProp(styleProps, 'flexGrow',_flexGrow)
+        flexShrink: getDefaultProp(styleProps, 'flexShrink', _flexShrink),
+        flexGrow: getDefaultProp(styleProps, 'flexGrow', _flexGrow)
     };
 
 
     return styleProps
+}
+
+/**
+ * 获取dataSet的兼容写法
+ */
+export function getDataSet(dom, params = '') {
+    if (dom.dataset) {
+        return dom.dataset[params.toLowerCase()]
+    } else {
+        return dom.getAttribute(`data-${params}`)
+    }
+}
+
+/**
+ *获取classist
+ */
+export function getClassList(element) {
+    return element.className.match(/([^\s]*)/g).filter(item => item.trim() !== '')
+}
+
+/**
+ * 获取计算后的css
+ */
+export function getComputedStyleByCss(element, css) {
+    let isElement = element instanceof Element;
+    if (!isElement) {
+        return {}
+    }
+    const dataSetText=getDataSet(element, 'class');
+    if (!dataSetText) {
+        return {}
+    }
+    css = css.map(item => {
+        const weights = getWeights(item.selector);
+        item.weights = {
+            arr: weights,
+            int: ipToInt(weights)
+        };
+        return item
+    });
+    const styleText = element.getAttribute('style') || '';
+    let res = {};
+    const styleSelector = () => {
+        let style = {};
+        styleText.split(';').map(item => {
+            if (item.trim() !== '') {
+                const [key, value] = item.split(':');
+                style[key.trim()] = value.trim();
+            }
+        });
+        return style;
+    };
+    const importantSelector = (obj, selector) => {
+        Object.keys(obj).map(key => {
+            if (res[key] !== undefined && res[key].endsWith('!important')) {
+                res['//' + key + '--' + selector] = obj[key];
+            } else {
+                if (res[key] !== undefined) {
+                    res['//' + key + '--' + selector] = obj[key];
+                }
+                res[key] = obj[key];
+            }
+        });
+        return obj
+    };
+    const selectors = JSON.parse(dataSetText);
+    const _css = [...css].sort((a, b) => b.weights.int - a.weights.int);
+    _css.forEach(item => {
+        if (selectors.includes(item.selector)) {
+            importantSelector(item[item.selector], item.selector)
+        }
+    });
+    return {
+        ...res,
+        ...styleSelector()
+    };
+
+}
+
+/**
+ * 获取权重
+ *  * 权重信息参考地址 https://www.cnblogs.com/wangmeijian/p/4207433.html
+ */
+function getWeights(selector) {
+    const arr = selector.split('');
+    let stack = [];
+    let weights = [0, 0, 0, 0];
+    arr.map((item, index) => {
+        stack.push(item);
+        if (index !== 0 && '. [#>+~:'.includes(item) || index === arr.length - 1) {
+            let pop = '';
+            if (index !== arr.length - 1) {
+                pop = stack.pop();
+            }
+            const itemSelector = stack.join('').trim();
+            //id
+            if (itemSelector.startsWith('#')) {
+                weights[1] = weights[1] + 1;
+                //类选择器、属性选择器或伪类
+            } else if (itemSelector.startsWith('.') || itemSelector.startsWith(':') || itemSelector.startsWith('[')) {
+                weights[2] = weights[2] + 1;
+                //通配选择器
+            } else if (itemSelector.startsWith('>') || itemSelector.startsWith('~') || itemSelector.startsWith('+') || itemSelector.startsWith('*')) {
+                //元素和伪元素
+            } else {
+                weights[3] = weights[3] + 1;
+            }
+            stack = [];
+            stack.push(pop)
+        }
+    });
+    return weights
+
+}
+
+/**
+ * ip转为数字
+ * @param ip
+ * @returns {number}
+ */
+function ipToInt(ip = [0, 0, 0, 0]) {
+    return ip[3] + ip[2] * 256 + ip[1] * 256 * 256 + ip[0] * 256 * 256 * 256
 }

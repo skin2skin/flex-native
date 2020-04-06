@@ -2,7 +2,7 @@
   "name": "flex-polyfill",
   "version": "1.0.0",
   "description": "flex-polyfill",
-  "main": "dist/index.min.js",
+  "main": "dist/flex.polyfill.min.js",
   "directories": {
     "test": "test"
   },

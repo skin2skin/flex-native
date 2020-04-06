@@ -1,8 +1,9 @@
 //内联元素
 import {
-    createTransform, debounce, getCss, getPrefixAndProp, getStyle,
+    createTransform, debounce, getClassList, getCss, getDataSet, getPrefixAndProp, getStyle,
     getTransform
 } from "./utils";
+import {isFlexBox} from "./readAll";
 
 const inlineArr = ['a',
     'abbr',
@@ -73,40 +74,63 @@ const FLEX_GROW = 0;//定义项目的放大比例，默认为0，即如果存在
 
 class Flex {
     constructor(params) {
+        console.log(params)
         this.init(params);
-        this.initState(params)
+        this.initState()
     }
 
     static defaultProps = {
         flexDirection: FLEX_DIRECTION.ROW,
         flexWrap: FLEX_WRAP.NOWRAP, //默认不换行
-        flexFlow:`${FLEX_DIRECTION.ROW} ${FLEX_WRAP.NOWRAP}`,
+        flexFlow: `${FLEX_DIRECTION.ROW} ${FLEX_WRAP.NOWRAP}`,
         alignItems: ALIGN_ITEMS.FLEX_START,
         alignSelf: ALIGN_ITEMS.FLEX_START,
         alignContent: ALIGN_CONTENT.STRETCH,
         justifyContent: JUSTIFY_CONTENT.FLEX_START, //默认左对齐
         order: 0,//属性定义项目的排列顺序。数值越小，排列越靠前，默认为0
-        flexGrow: 0,//属性定义项目的放大比例，默认为0，即如果存在剩余空间，也不放大
-        flexShrink: 1 //属性定义了项目的缩小比例，默认为1，即如果空间不足，该项目将缩小
+        flexGrow: FLEX_GROW,//属性定义项目的放大比例，默认为0，即如果存在剩余空间，也不放大
+        flexShrink: FLEX_SHRINK //属性定义了项目的缩小比例，默认为1，即如果空间不足，该项目将缩小
     };
 
-    init({element, props}) {
+    init({element, props, classList, computedStyle, children}) {
+
+        //const childAst = this.getChildren(children);
+
         this.props = props;
         this.element = element;
-        const {flexDirection,flexWrap} = props;
+        this.classList = classList;
+        this.computedStyle = computedStyle;
+        this.children = children;
+        this.childrenComputedStyle = children;
+        const {flexDirection, flexWrap} = props;
+        const wrapperStyle = getStyle(element);
+        let wrapperRect = element.getBoundingClientRect();
+        wrapperRect = {
+            left: wrapperRect.left + parseInt(wrapperStyle.paddingLeft),
+            top: wrapperRect.top + parseInt(wrapperStyle.paddingTop),
+            width: wrapperRect.width - parseInt(wrapperStyle.paddingLeft) - parseInt(wrapperStyle.paddingRight) - parseInt(wrapperStyle.borderLeftWidth) - parseInt(wrapperStyle.borderRightWidth),
+            height: wrapperRect.height - parseInt(wrapperStyle.paddingTop) - parseInt(wrapperStyle.paddingBottom) - parseInt(wrapperStyle.borderTopWidth) - parseInt(wrapperStyle.borderBottomWidth)
+        };
+        this.left = wrapperRect.left;
+        this.top = wrapperRect.top;
+        this.height = wrapperRect.height;
+        this.width = wrapperRect.width;
+
+        console.log('---', children)
+        this.style = wrapperStyle;
         let W = 'width';
         let H = 'height';
         let X = 'x';
         let Y = 'y';
         let FLEX_START = 'FLEX_START';
-        let FLEX_END = 'FLEX_END'
+        let FLEX_END = 'FLEX_END';
         if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
             W = 'height';
             H = 'width';
             X = 'y';
             Y = 'x';
         }
-        if(flexWrap===FLEX_WRAP.WRAP_REVERSE){
+        if (flexWrap === FLEX_WRAP.WRAP_REVERSE) {
             FLEX_START = 'FLEX_END';
             FLEX_END = 'FLEX_START'
         }
@@ -116,33 +140,50 @@ class Flex {
         this.Y = Y;
         this.FLEX_START = FLEX_START;
         this.FLEX_END = FLEX_END;
-        const fn=debounce((e)=>{
-            console.log('DOMSubtreeModified',e.target.innerHTML)
-        },50);
-        element.addEventListener('DOMSubtreeModified',fn);
+        const fn = debounce((e) => {
+
+            console.log('DOMSubtreeModified-inner', e.target)
+            // new Flex({element, props})
+            //this.initState();
+
+            /* const style=getStyle(element);
+             const width=parseInt(style.width);
+             const height=parseInt(style.height);
+             if(width!==this.width||height!==this.height){
+                 this.width=width;
+                 this.height=height;
+                 console.log(this)
+                 this.initState(e.target);
+             }*/
+        }, 50);
+        const fn2 = debounce((e) => {
+            console.log('onresize')
+            const style = getStyle(element);
+            const width = parseInt(style.width);
+            const height = parseInt(style.height);
+            if (width !== this.width || height !== this.height) {
+                this.width = width;
+                this.height = height;
+                //this.initState();
+            }
+        }, 50);
+        element.addEventListener('DOMSubtreeModified', fn);
+        /*if(element.attachEvent){
+            element.attachEvent('onresize',fn2);
+        }*/
     }
 
-    initState({element, props}) {
-        let wrapperRect = element.getBoundingClientRect();
+    initState(target) {
+        const {style: wrapperStyle, left, top, element} = this;
+        let _children = Array.from(element.childNodes);
+        const remakePos = _children.map((node, index) => {
 
-        const wrapperStyle = getStyle(element);
-        wrapperRect = {
-            left: wrapperRect.left + parseInt(wrapperStyle.paddingLeft),
-            top: wrapperRect.top + parseInt(wrapperStyle.paddingTop),
-            width: wrapperRect.width - parseInt(wrapperStyle.paddingLeft) - parseInt(wrapperStyle.paddingRight) - parseInt(wrapperStyle.borderLeftWidth) - parseInt(wrapperStyle.borderRightWidth),
-            height: wrapperRect.height - parseInt(wrapperStyle.paddingTop) - parseInt(wrapperStyle.paddingBottom) - parseInt(wrapperStyle.borderTopWidth) - parseInt(wrapperStyle.borderBottomWidth)
-        };
-        this.height = wrapperRect.height;
-        this.width = wrapperRect.width;
-        this.wrapperRect = wrapperRect;
-        this.style = wrapperStyle;
-        const childAst = this.getChildren();
-        this.children = childAst;
-        const remakePos = Array.from(childAst.map(item => item.element)).map((node, index) => {
             const obj = node.getBoundingClientRect();
             const style = getStyle(node);
+            const computedStyle = this.childrenComputedStyle[index].computedStyle;
+
             //排除掉fixed等影响布局的
-            const isFixed = !!(style.position === 'absolute' || style.position === 'fixed');
+            const isFixed = (style.position === 'absolute' || style.position === 'fixed');
             if (isFixed) {
                 return {
                     isFixed,
@@ -158,30 +199,88 @@ class Flex {
                 }
             }
             const _transform = getTransform(node);
+            let width = obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight);
+            let height = obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom);
+            //console.log(node===target)
+            //console.log('parentNodeistrue',node.parentNode===target);
+            //说明父类在修改属性
+            /* if(node.parentNode===target){
+                 const p_style=getStyle(node);
 
+                 width=parseInt(getDataSet(node,'width'));
+                 height=parseInt(getDataSet(node,'height'));
+             }*/
+
+            //如果当前没有设置宽度
+            if (this.childrenComputedStyle[index].props && !computedStyle.width) {
+               /* console.log(this.childrenComputedStyle[index]);
+                const children = this.childrenComputedStyle[index].children;
+                console.log('设置宽度', children);
+                let have=false;
+                width=children.reduce((al, item) => {
+                    console.log(item)
+                    const rect = item.element.getBoundingClientRect();
+                    const _style = getStyle(item.element);
+                    const _width = rect.width + parseInt(_style.marginLeft) + parseInt(_style.marginRight)
+                    if (item.computedStyle.width && item.computedStyle.width.includes('%')) {
+                        have=true;
+                        return al;
+                    } else {
+                        return al+_width;
+                    }
+                }, 0);
+                width+=have?11.734:0;
+                console.log('设置宽度', width);*/
+            }
+
+            const scrollTop = top < 0 ? 0 : document.documentElement.scrollTop;
+            const alignSelf = computedStyle['align-self'] ? computedStyle['align-self'] : this.computedStyle['align-items'];
+            const flexGrow = computedStyle['flex-grow'] || Flex.defaultProps.flexGrow;
+            const flexShrink = computedStyle['flex-shrink'] || Flex.defaultProps.flexShrink;
             return {
                 element: node,
+                computedStyle,
                 isFixed,
-                props: childAst[index].props,
+                props: {
+                    flexGrow,
+                    flexShrink,
+                    alignSelf: alignSelf || Flex.defaultProps.alignItems
+                },
                 borderLeftWidth: parseInt(style.borderLeftWidth),
                 borderRightWidth: parseInt(style.borderRightWidth),
                 marginLeft: parseInt(style.marginLeft),
                 marginRight: parseInt(style.marginRight),
-                width: obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight),
-                height: obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom),
-                x: _transform.x - (obj.left - parseInt(style.marginLeft) - parseInt(wrapperStyle.borderLeftWidth) - wrapperRect.left),
-                y: _transform.y - (obj.top - parseInt(style.marginTop) - parseInt(wrapperStyle.borderLeftWidth) - wrapperRect.top),
+                paddingLeft: parseInt(style.paddingLeft),
+                paddingRight: parseInt(style.paddingRight),
+                cssWidth: 0,
+                notPercentWidth: computedStyle['width'] && computedStyle['width'].includes('%') ? 0 : width,
+                width: width,
+                height: height,
+                x: _transform.x - (obj.left - parseInt(style.marginLeft) - parseInt(wrapperStyle.borderLeftWidth) - left),
+                y: _transform.y - (obj.top - parseInt(style.marginTop) - parseInt(wrapperStyle.borderLeftWidth) - top + scrollTop),
             }
         }).filter((item) => !item.isFixed);
-        const flowBox = this.createFlowBox(remakePos,wrapperStyle);
-        console.log('flowBox', flowBox)
-        const box = this.startLayout(flowBox);
+        const flowBox = this.createFlowBox(remakePos);
+        this.height = this.computedStyle.height ? this.height : flowBox.reduce((al, b) => al + b.max, 0);
 
+        const array = this.startLayout(flowBox);
+
+        element.style['height'] = this.height + 'px';
+        this.flowLayoutBox = array;
         remakePos.forEach((it, index) => {
-            const item = Flex.findByIndex(box.array, index);
+            const item = Flex.findByIndex(array, index);
             const {element} = item;
             element.style[getPrefixAndProp('transform')] = createTransform(item);
-            element.style[this.W]=item[this.W]+item.withOffset+'px'
+            const acWidth = item[this.W] + item.withOffset;
+            element.style[this.W] = (acWidth < 0 ? 0 : acWidth) + 'px';
+
+            const itemPrams = this.children[index];
+            if (itemPrams.props) {
+                new Flex(this.children[index])
+            }
+
+            element.setAttribute('data-width', item.width);
+            element.setAttribute('data-height', item.height)
         });
     }
 
@@ -191,39 +290,56 @@ class Flex {
 
     }
 
-    getFlowArr(remakePos, wrapperStyle) {
-        const {flexDirection, flexWrap} = this.props;
+    /**
+     *根据flexGrow和FlexShrink重新定义宽度或者高度
+     */
+    resetWidthByShrinkAndGrow(arr) {
+        const {flexDirection} = this.props;
         const {W, X} = this;
-        let arr = [];
-        if (flexWrap === FLEX_WRAP.NOWRAP) {
-            const lineArrayWidth = remakePos.reduce((al, item) => al + item[W], 0);
-            const restWidth = this[W]- lineArrayWidth;
-            let flexGrowArr = remakePos.map(item =>Number(item.props.flexGrow));
+        return arr.map(array => {
+            const lineArrayWidth = array.reduce((al, item) => al + item[W], 0);
+            const restWidth = this[W] - lineArrayWidth;
+            let flexGrowArr = array.map(item => Number(item.props.flexGrow));
             const allRateGrow = flexGrowArr.reduce((a, b) => a + b, 0);
-            let flexShrinkWidth = remakePos.reduce((al, item) => {
-                let itemShrink=Number(item.props.flexShrink);
+            let flexShrinkWidth = array.reduce((al, item) => {
+                let itemShrink = Number(item.props.flexShrink);
                 return al + item[W] * itemShrink
             }, 0);
-            remakePos=remakePos.map(item=>{
-                let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth,allRateGrow, flexShrinkWidth);
-                item.withOffset=-item.borderLeftWidth-item.borderRightWidth-item.marginLeft-item.marginRight;
-                item.withOffset2=needAdd;
+            array = array.map(item => {
+                let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth, allRateGrow, flexShrinkWidth);
+                item.withOffset = -item.borderLeftWidth - item.borderRightWidth - item.marginLeft - item.marginRight - item.paddingLeft - item.paddingRight;
+                item.withOffset2 = needAdd;
                 return item;
             });
 
-            remakePos=remakePos.map((item,index)=>{
-                item[W]=item[W]+item.withOffset2;
+            array = array.map((item, index) => {
+                item[W] = item[W] + item.withOffset2;
                 //由于Y轴本身就是流动的 会影响布局 所以给加上之前的withOffset2
-                if(flexDirection.includes('column')){
-                    if(index!==0){
-                        const pre=remakePos.filter((it,ind)=>ind<index).reduce((al,b)=>{
-                            return al+b.withOffset2
-                        },0);
-                        item[X]=item[X]-pre;
+                if (flexDirection.includes('column')) {
+                    if (index !== 0) {
+                        const pre = array.filter((it, ind) => ind < index).reduce((al, b) => {
+                            return al + b.withOffset2
+                        }, 0);
+                        item[X] = item[X] - pre;
                     }
                 }
                 return item;
             });
+            return array;
+        })
+    }
+
+    /**
+     * 先设置流动盒子的X轴
+     * @param remakePos
+     * @param wrapperStyle
+     * @returns {any[]}
+     */
+    getFlatArray(remakePos, wrapperStyle) {
+        const {flexDirection, flexWrap} = this.props;
+        const {W, X} = this;
+        let arr = [];
+        if (flexWrap === FLEX_WRAP.NOWRAP) {
             arr.push(remakePos)
         } else {
             let sliceIndex = 0;
@@ -245,6 +361,8 @@ class Flex {
             }, 0);
         }
 
+        //根据flexGrow和FlexShrink重新定义宽度或者高度
+        arr = this.resetWidthByShrinkAndGrow(arr);
         if (flexWrap === FLEX_WRAP.WRAP_REVERSE) {
             arr = arr.reverse()
         }
@@ -257,7 +375,7 @@ class Flex {
 
 
         return arr.map((item) => {
-            const lineArrayWidth=item.reduce((al, item) => al + item[W], 0);
+            const lineArrayWidth = item.reduce((al, item) => al + item[W], 0);
             return {
                 max: this.getStretchMax(item),
                 lineArray: item.map((_item, _index) => {
@@ -283,10 +401,10 @@ class Flex {
      * @param flexShrinkWidth
      * @returns {*}
      */
-    getNeedAddWidth(item, restWidth, allWidth,allRateGrow, flexShrinkWidth) {
+    getNeedAddWidth(item, restWidth, allWidth, allRateGrow, flexShrinkWidth) {
 
-        const {W}=this;
-        let grow=Number(item.props['flexGrow']);
+        const {W} = this;
+        let grow = Number(item.props['flexGrow']);
         let res;
         //缩小
         if (allWidth > this[W]) {
@@ -297,19 +415,16 @@ class Flex {
         } else {
             res = 0;
         }
-        console.log(res)
         return res;
     }
 
     /**
      * 创建流动布局的盒子
      * @param remakePos
-     * @param wrapperStyle
-     * @returns {{height: number|*, array: *}}
      */
-    createFlowBox(remakePos, wrapperStyle) {
-        const {Y} = this;
-        let posArr = this.getFlowArr(remakePos, wrapperStyle);
+    createFlowBox(remakePos) {
+        const {Y, style} = this;
+        let posArr = this.getFlatArray(remakePos, style);
         return posArr.map((item, it) => {
             const getTop = (posArr.filter((a, b) => b <= it - 1).reduce((a, b) => a + b.max, 0));
             item.lineArray = item.lineArray.map(item => {
@@ -333,10 +448,8 @@ class Flex {
             item.lineArray = this.setLineItemLocation(item, arr, it);
             return item
         });
-        return {
-            height: this.height,
-            array: arr
-        }
+        console.log('开始布局---', arr)
+        return arr
     }
 
     static findByIndex(arr, index) {
@@ -361,12 +474,11 @@ class Flex {
      * @returns {*}
      */
     setLineLocation(arr) {
-        const {H, Y,FLEX_START,FLEX_END} = this;
-        console.log('arr----', arr);
-        let {alignContent,flexWrap} = this.props;
+        const {H, Y, FLEX_START, FLEX_END} = this;
+        let {alignContent, flexWrap} = this.props;
         //alignContent属性定义了多根轴线的对齐方式。如果项目只有一根轴线，该属性不起作用
-        if(flexWrap===FLEX_WRAP.NOWRAP){
-            alignContent=ALIGN_CONTENT.STRETCH
+        if (flexWrap === FLEX_WRAP.NOWRAP) {
+            alignContent = ALIGN_CONTENT.STRETCH
         }
         //每一行的最大值加起来
         const allHeight = arr.reduce((al, item) => {
@@ -383,7 +495,6 @@ class Flex {
                     item.axisHeight = item.max + marginTop;
                     //得到前面的总的行高度
                     const marginZero = marginTop * index;
-                    console.log(marginZero)
                     item.lineArray = item.lineArray.map(rect => ({
                         ...rect,
                         [Y]: rect[Y] + marginZero
@@ -414,7 +525,7 @@ class Flex {
                     item.lineArray = item.lineArray.map(rect => ({
                         ...rect,
                         [Y]: rect[Y] + (this[H] - allHeight) / 2
-                    }))
+                    }));
                     return item;
                 });
                 break;
@@ -462,9 +573,8 @@ class Flex {
      * @returns {*}
      */
     setLineItemLocation(item, arr = [], index) {
-        const {W,H,X, Y,FLEX_START,FLEX_END} = this;
+        const {W, H, X, Y, FLEX_START, FLEX_END} = this;
         const {flexDirection, justifyContent, alignItems} = this.props;
-        console.log('props---------', this.props);
         const allLength = item.lineArray.reduce((al, b) => al + b[W], 0);
         let restLength = (this[W] - allLength) || 0;
         //如果是不换行的情况下没有超出
@@ -561,7 +671,6 @@ class Flex {
                 break;
             case ALIGN_ITEMS.CENTER:
                 item.lineArray = item.lineArray.map((rect) => {
-                    console.log('ppppppppp---------', item.axisHeight)
                     const props = rect.props || {};
                     if (props['alignSelf'] === ALIGN_ITEMS[FLEX_START]) {
                     } else if (props['alignSelf'] === ALIGN_ITEMS[FLEX_END]) {
@@ -584,19 +693,20 @@ class Flex {
         }
 
 
-
         return item.lineArray
     }
 
 
-    getChildren() {
+    getChildren(children) {
+        console.log('children---', children)
         const {element} = this;
-        const {flexWrap, flexDirection} = this.props;
-        let childNodes = Array.from(element.childNodes);
-        childNodes = childNodes.map(ele => {
+        let childNodes = Array.from(element.childNodes).filter(item => !(item.nodeType === 3 && /\s/.test(item.nodeValue) || item.nodeType === 8));
+        childNodes = childNodes.map((ele, index) => {
             const alignItems = getCss(element).alignItems;
             return {
                 element: ele,
+                classList: getClassList(ele),
+                computedStyle: this.childrenComputedStyle[index].computedStyle,
                 props: {
                     flexDirection: getCss(ele).flexDirection,
                     flexWrap: getCss(ele).flexWrap,
