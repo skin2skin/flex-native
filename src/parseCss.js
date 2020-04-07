@@ -56,7 +56,9 @@ function  getAllStyle(document) {
             task.push(new Promise((resolve)=>{
                 httpGet(ele.href).then(result=>{
                     const comment=result.match(/(\/\*)\/?(([^\*]\/)|[^\/])*(\*\/)/g);
-                    comment&&(result=result.replace(comment[0],''))
+                    comment && comment.forEach(item => {
+                        result = result.replace(item, '')
+                    });
                     res[index]={
                         cssText:result
                     };
@@ -69,7 +71,9 @@ function  getAllStyle(document) {
             }
             let result=ele.outerText||'';
             const comment=result.match(/(\/\*)\/?(([^\*]\/)|[^\/])*(\*\/)/g);
-            comment&&(result=result.replace(comment[0],''))
+            comment && comment.forEach(item => {
+                result = result.replace(item, '')
+            });
             res[index]={
                 cssText:result
             };

@@ -309,12 +309,10 @@ class Flex {
             const restWidth = this[W] - lineArrayWidth;
             let flexGrowArr = array.map(item => Number(item.props.flexGrow));
             const allRateGrow = flexGrowArr.reduce((a, b) => a + b, 0);
-            let flexShrinkWidth = array.reduce((al, item) => {
-                let itemShrink = Number(item.props.flexShrink);
-                return al + item[W] * itemShrink
-            }, 0);
+            const allFlexShrink = array.map(item => Number(item.props.flexShrink)).reduce((a, b) => a + b, 0);
             array = array.map(item => {
-                let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth, allRateGrow, flexShrinkWidth);
+                let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth, allRateGrow, allFlexShrink);
+                console.log(needAdd)
                 item.withOffset = -item.borderLeftWidth - item.borderRightWidth - item.marginLeft - item.marginRight - item.paddingLeft - item.paddingRight;
                 item.withOffset2 = needAdd;
                 return item;
@@ -400,17 +398,16 @@ class Flex {
      * @param restWidth
      * @param allWidth
      * @param allRateGrow
-     * @param flexShrinkWidth
+     * @param allFlexShrink
      * @returns {*}
      */
-    getNeedAddWidth(item, restWidth, allWidth, allRateGrow, flexShrinkWidth) {
-
+    getNeedAddWidth(item, restWidth, allWidth, allRateGrow, allFlexShrink) {
         const {W} = this;
         let grow = Number(item.props['flexGrow']);
         let res;
         //缩小
         if (allWidth > this[W]) {
-            res = (item[W] / flexShrinkWidth) * restWidth
+            res = restWidth * (Number(item.props['flexShrink'])) / allFlexShrink;
             // 放大
         } else if (allWidth < this[W] && grow) {
             res = restWidth * (grow / allRateGrow)

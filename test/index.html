@@ -43,7 +43,10 @@
         .etty {
             display: flex;
             flex-wrap: nowrap;
-            flex-direction: column;
+            /* align-items: center*/
+            /* justify-content: center;  */
+            align-items: center;
+            justify-content: center;
         }
 
         .etty>div {
@@ -56,9 +59,10 @@
 <body>
     <div>
         <div class="wrapper etty">
-            <div class="box" style="flex-shrink:1;">1</div>
-            <div class="box2" style="flex-shrink:1;align-self: flex-start;">2</div>
-            <div class="box3" style="order: 3;">3</div>
+            <div class="box" style="flex-shrink:2;">1</div>
+            <div class="box2" style="flex-shrink:2;">2</div>
+            <div class="box2" style="flex-shrink:6;">2</div>
+       
 
             <!-- <div class="wrapper-inner" style="order: 6;">
                 <div class="box" style="order: 1;">1</div>
@@ -69,7 +73,6 @@
     </div>
 </body>
 
-    <script src="./flex.polyfill.min.js"></script>
 
 
 </html>
