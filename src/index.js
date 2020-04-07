@@ -7,11 +7,11 @@ import Flex from "./flex";
 /*window.addEventListener('load',()=>{
 
 });*/
-main(document);
 
 const fn = debounce(main, 50);
+fn();
 
-//document.addEventListener('DOMNodeInserted', fn);
+// document.addEventListener('DOMNodeInserted', fn);
 
 function main() {
     console.log('DOMNodeInserted--', document);

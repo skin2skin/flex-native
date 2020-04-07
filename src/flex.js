@@ -175,9 +175,9 @@ class Flex {
 
     initState(target) {
         const {style: wrapperStyle, left, top, element} = this;
-        let _children = Array.from(element.childNodes);
+        const { flexDirection } = this.props;
+        let _children = Array.from(element.childNodes).filter(ele => ele instanceof Element);
         const remakePos = _children.map((node, index) => {
-
             const obj = node.getBoundingClientRect();
             const style = getStyle(node);
             const computedStyle = this.childrenComputedStyle[index].computedStyle;
@@ -261,8 +261,13 @@ class Flex {
             }
         }).filter((item) => !item.isFixed);
         const flowBox = this.createFlowBox(remakePos);
-        this.height = this.computedStyle.height ? this.height : flowBox.reduce((al, b) => al + b.max, 0);
-
+        this.height = this.computedStyle.height ? this.height : flowBox.reduce((al, b) => {
+            if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
+                return al+b.lineArrayWidth
+            } else {
+                return al + b.max
+            }
+        }, 0);
         const array = this.startLayout(flowBox);
 
         element.style['height'] = this.height + 'px';
@@ -283,11 +288,14 @@ class Flex {
             element.setAttribute('data-height', item.height)
         });
     }
-
+    /**
+     * 
+     * @param {} item 
+     */
     getStretchMax(item) {
         const {H} = this;
+    
         return Math.max(...item.filter(item => !item.isFixed).map(a => a[H]))
-
     }
 
     /**
@@ -365,12 +373,6 @@ class Flex {
         arr = this.resetWidthByShrinkAndGrow(arr);
         if (flexWrap === FLEX_WRAP.WRAP_REVERSE) {
             arr = arr.reverse()
-        }
-
-        if (parseInt(wrapperStyle.height) === 0) {
-            this.height = arr.reduce((al, b) => {
-                return al + this.getStretchMax(b)
-            }, 0);
         }
 
 

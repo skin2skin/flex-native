@@ -1,88 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-  <!--  <link type="text/css" rel="stylesheet" href="/css.css">-->
+    <!--  <link type="text/css" rel="stylesheet" href="/css.css">-->
     <style>
-
-        .wrapper{
-            display: flex;
-            align-items:center;
-            justify-content:flex-end;
-            align-content: stretch;
-            flex-wrap: nowrap;
-            flex-direction: row;
-            //flex-flow: row nowrap;
-            //flex: 23;
-            width: 600px;
-           // height: 800px;
+        .wrapper {
+            width: 800px;
             border: 5px solid #cccccc;
         }
-        *{
+
+        * {
             color: yellow;
         }
-        .wrapper div{
+
+        .wrapper div {
             color: red;
+            border: 1px solid #cccccc;
         }
-        .etty{
 
-        }
-        .wrapper-inner{
-            display: flex;
+        .wrapper-inner {
             height: 400px;
-            border: 1px solid salmon ;
-            justify-content: center;
-            align-items: flex-end;
         }
-        .box{
-            width: 30%;
-            //align-self: center;
-            height: 100px;
-            border: 5px solid red;
-            //margin: 10px;
-            color: blue;
-            //flex: 1;
-        }
-        .box2{
-            width: 100px;
-            height: 100px;
-            //align-self: center;
-            border: 5px solid red;
-           // flex: 2;
-        }
-        .box3{
-            width: 200px;
-            height: 60px;
-            border: 5px solid red;
-            //flex: 3;
-        }
-    </style>
-</head>
-<body style="opacity: 0">
-<div>
-    <style>
-        .a{}
-    </style>
-    <div class="wrapper etty" style="display: flex; a:123">
-        <div class="box" style="order: 1;" >1</div>
-        <div class="box2" style="order: 2;">2</div>
-        <div class="box3" style="order: 3;">3</div>
-       <div class="box2" style="order: 4;">4</div>
-        <div class="box2" style="order: 5;">5</div>
-        <div class="wrapper-inner" style="order: 6;">
-            <div class="box" style="order: 1;" >1</div>
-            <div class="box2" style="order: 2;">2</div>
-            <div class="box3" style="order: 3;">3</div>
-        </div>
-       <!-- <div class="box3" style="order: 6;">6</div>
-         <div class="box3" style="order: 6;">6</div>
-        <div class="box3" style="order: 6;">6</div>
-        <div class="box3" style="order: 6;">6</div>
-        <div class="box3" style="order: 6;">6</div>-->
-    </div>
 
-</div>
+        .box {
+            width: 500px;
+            height: 100px;
+            color: blue;
+        }
+
+        .box2 {
+            width: 100px;
+            height: 40px;
+        }
+
+        .box3 {
+            width: 10px;
+            height:600px;
+        }
+
+        .etty {
+            display: flex;
+            flex-wrap: nowrap;
+            flex-direction: column;
+        }
+
+        .etty>div {
+            width: 400px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div>
+        <div class="wrapper etty">
+            <div class="box" style="flex-shrink:1;">1</div>
+            <div class="box2" style="flex-shrink:1;align-self: flex-start;">2</div>
+            <div class="box3" style="order: 3;">3</div>
+
+            <!-- <div class="wrapper-inner" style="order: 6;">
+                <div class="box" style="order: 1;">1</div>
+                <div class="box2" style="order: 2;">2</div>
+                <div class="box3" style="order: 3;">3</div>
+            </div> -->
+        </div>
+    </div>
 </body>
-<!--<script src="./../dist/flex.polyfill.min.js"></script>-->
+
+    <script src="./flex.polyfill.min.js"></script>
+
+
 </html>

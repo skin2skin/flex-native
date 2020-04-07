@@ -1,9 +1,9 @@
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const path = require('path');
 module.exports = {
-    //mode: 'production',
-    mode: 'development',
-    devtool: 'source-map',
+    mode: 'production',
+    // mode: 'development',
+    // devtool: 'source-map',
     entry: {
         app: path.resolve(__dirname, '.', 'src/index.js'),
     },
