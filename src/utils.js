@@ -225,6 +225,52 @@ export function getClassList(element) {
 }
 
 /**
+ * 从cssText转为style对象
+ * @param styleText
+ * @returns {{}}
+ */
+function getStyleFromCssText(styleText){
+    let style = {};
+    styleText.split(';').map(item => {
+        if (item.trim() !== '') {
+            const [key, value] = item.split(':');
+            style[key.trim()] = value.trim();
+        }
+    });
+    return style;
+}
+
+/**
+ * 获取真实的style
+ */
+function getRealStyle(element){
+    const preWithText=getDataSet(element,'width')||'';
+    if(!preWithText){
+        return getStyleFromCssText(element.getAttribute('style') || '');
+    }else{
+        const preHeightText=getDataSet(element,'height')||'';
+        const styleText=element.getAttribute('style')||'';
+        const style=getStyleFromCssText(styleText);
+        const oriStyleText=getDataSet(element,'origin')||'';
+        const oriStyle=getStyleFromCssText(oriStyleText);
+        //todo 有可能设的宽度或者高度和我之前计算出来的高度一致 就有bug
+        if(style.width===preWithText){
+            element.style.width=oriStyle.width
+        }else{
+            element.style.width=style.width
+        }
+        if(style.height===preHeightText){
+            element.style.height=oriStyle.height
+        }else{
+            element.style.height=style.height
+        }
+
+
+    }
+
+}
+
+/**
  * 获取计算后的css
  */
 export function getComputedStyleByCss(element, css) {
@@ -244,18 +290,9 @@ export function getComputedStyleByCss(element, css) {
         };
         return item
     });
-    const styleText = element.getAttribute('style') || '';
+
+    const style =getRealStyle(element) ;
     let res = {};
-    const styleSelector = () => {
-        let style = {};
-        styleText.split(';').map(item => {
-            if (item.trim() !== '') {
-                const [key, value] = item.split(':');
-                style[key.trim()] = value.trim();
-            }
-        });
-        return style;
-    };
     const importantSelector = (obj, selector) => {
         Object.keys(obj).map(key => {
             if (res[key] !== undefined && res[key].endsWith('!important')) {
@@ -278,7 +315,7 @@ export function getComputedStyleByCss(element, css) {
     });
     return {
         ...res,
-        ...styleSelector()
+        ...style
     };
 
 }
@@ -326,4 +363,45 @@ function getWeights(selector) {
  */
 function ipToInt(ip = [0, 0, 0, 0]) {
     return ip[3] + ip[2] * 256 + ip[1] * 256 * 256 + ip[0] * 256 * 256 * 256
+}
+
+/**
+ * 监听dom变化
+ */
+export function observerDocument(targetNode,callback) {
+//统一兼容问题
+    let MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+    //判断浏览器是或否支持MutationObserver;
+    if(!!MutationObserver){
+        const config = { attributes: true, childList: true, subtree: true };
+        const observer = new MutationObserver(function(mutationsList, observer) {
+            // Use traditional 'for loops' for IE 11
+            for(let mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    //A child node has been added or removed.
+                    callback()
+                }
+                else if (mutation.type === 'attributes') {
+                    //'The ' + mutation.attributeName + ' attribute was modified.'
+                    callback()
+                }
+            }
+        });
+        // Start observing the target node for configured mutations
+        observer.observe(targetNode, config);
+    }else {
+        targetNode.addEventListener('DOMSubtreeModified', callback);
+    }
+}
+
+
+
+
+
+let  inner=false;
+export function getInner() {
+   return inner;
+}
+export function setInner(boo) {
+    inner=boo
 }

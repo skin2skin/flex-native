@@ -1,7 +1,7 @@
 //内联元素
 import {
     createTransform, debounce, getClassList, getCss, getDataSet, getPrefixAndProp, getStyle,
-    getTransform
+    getTransform, setInner
 } from "./utils";
 import {isFlexBox} from "./readAll";
 
@@ -141,8 +141,18 @@ class Flex {
         this.FLEX_START = FLEX_START;
         this.FLEX_END = FLEX_END;
         const fn = debounce((e) => {
-
-            console.log('DOMSubtreeModified-inner', e.target)
+            const ele= e.target;
+            const isChangedFromInner=Boolean(ele.getAttribute('data-isflex'));
+            if(!isChangedFromInner){
+                console.log('DOMSubtreeModified-inner',ele)
+                //console.log(isChangedFromInner)
+            }else{
+                element.removeEventListener('DOMSubtreeModified', fn);
+                ele.removeAttribute('data-isflex')
+                setTimeout(()=>{
+                    element.addEventListener('DOMSubtreeModified', fn);
+                })
+            }
             // new Flex({element, props})
             //this.initState();
 
@@ -155,7 +165,7 @@ class Flex {
                  console.log(this)
                  this.initState(e.target);
              }*/
-        }, 50);
+        }, 0);
         const fn2 = debounce((e) => {
             console.log('onresize')
             const style = getStyle(element);
@@ -167,13 +177,13 @@ class Flex {
                 //this.initState();
             }
         }, 50);
-        element.addEventListener('DOMSubtreeModified', fn);
+        //element.addEventListener('DOMSubtreeModified', fn);
         /*if(element.attachEvent){
             element.attachEvent('onresize',fn2);
         }*/
     }
 
-    initState(target) {
+    initState() {
         const {style: wrapperStyle, left, top, element} = this;
         const { flexDirection } = this.props;
         let _children = Array.from(element.childNodes).filter(ele => ele instanceof Element);
@@ -283,9 +293,10 @@ class Flex {
             if (itemPrams.props) {
                 new Flex(this.children[index])
             }
-
-            element.setAttribute('data-width', item.width);
-            element.setAttribute('data-height', item.height)
+            element.setAttribute('data-origin', element.getAttribute('style'));
+            element.setAttribute('data-width', item.width+'px');
+            element.setAttribute('data-height', item.height+'px');
+            setInner(true);
         });
     }
     /**

@@ -5,7 +5,11 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <!--  <link type="text/css" rel="stylesheet" href="/css.css">-->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <style>
+        body{
+            background: grey;
+        }
         .wrapper {
             width: 800px;
             border: 5px solid #cccccc;
@@ -48,7 +52,20 @@
             align-items: center;
             justify-content: center;
         }
+        .etty2 {
+            display: flex;
+            flex-wrap: nowrap;
+            /* align-items: center*/
+            /* justify-content: center;  */
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #cccccc;
 
+        }
+        .etty2>div{
+            width: 400px;
+            border: 1px solid #cccccc;
+        }
         .etty>div {
             width: 400px;
         }
@@ -70,7 +87,37 @@
                 <div class="box3" style="order: 3;">3</div>
             </div> -->
         </div>
+        <div class="wrapper etty">
+            <div class="box" style="flex-shrink:2;">1</div>
+            <div class="box2" style="flex-shrink:2;">2</div>
+            <div class="box2" style="flex-shrink:6;">2</div>
+        </div>
+        <div id="app" class="etty2">
+            <div class="box" v-bind:style="styleObject">菜鸟教程</div>
+            <div class="box2" style="flex-shrink:2;">2</div>
+            <div class="box2" style="flex-shrink:6;">2</div>
+        </div>
     </div>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            styleObject: {
+                width:'400px',
+                color: 'green',
+                fontSize: '30px'
+            }
+        },
+        mounted:function () {
+            console.log(this);
+            var _this=this;
+            setTimeout(function () {
+                _this.styleObject.width='100px'
+            },3000);
+        }
+    })
+
+</script>
 </body>
 
 
