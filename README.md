@@ -1,15 +1,15 @@
 # flex-polyfill
 English | [简体中文](./README-zh_CN.md)
-### 🔗 内容列表
+### 🔗 Content list
 - [Background](#background)
 
-- [Environment Support](#environment-support)
+- [Environment Support](#-environment-support)
 
-- [Installation](#installation)
+- [Installation](#-installation)
 
-- [Usage](#usage)
+- [Usage](#-usage)
 
-- [Contributor](#contributor)
+- [Contributor](#-contributor)
 
 ### Background
 - Because most of the previously written projects use flex layout, and when they arrive at a new company, they start to make IE9 compatible, while flex layout only supports ie10 +, so it's not so convenient to implement a middle layout in IE9. Although it can also be implemented with other layouts, it's not so skilled, and the development efficiency is reduced
@@ -39,16 +39,18 @@ npm install flex-polyfill
 import('flex-polyfill');
 ```
 - demo
-	- css 
+	- css
+	<br>
 	.wrapper{     
 		display:flex;
 		align-items:center;
 		justify-content:center;
 };
 	- inline
-```javascript
-<div style='display:flex;align-items:center'>;
-```
+	<br>
+	&lt;div style='display:flex;align-items:center&gt;
+	<br>
+	
 Generally speaking, it's no different from writing CSS
 
 ### 🤝 Contributor
