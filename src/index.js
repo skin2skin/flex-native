@@ -26,8 +26,6 @@ function main() {
         //开始设置位置
         render(flexBox);
         document.body.style.opacity = 1;
-        console.log('parseCssEnd--', new Date().getTime() - time)
-        console.log(flexBox);
     })
 
 }
@@ -40,7 +38,7 @@ const render = (flexBox) => {
     flexBox.forEach(item => {
         //说明是flexBox
         if (item.props) {
-            console.log('newFlex---', new Flex(item))
+            new Flex(item);
         } else {
             render(item.children)
         }

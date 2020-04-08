@@ -1,9 +1,8 @@
 //内联元素
 import {
-    createTransform, debounce, getClassList, getCss, getDataSet, getPrefixAndProp, getStyle,
+    createTransform, getPrefixAndProp, getStyle,
     getTransform, setInner
 } from "./utils";
-import {isFlexBox} from "./readAll";
 
 const inlineArr = ['a',
     'abbr',
@@ -74,7 +73,6 @@ const FLEX_GROW = 0;//定义项目的放大比例，默认为0，即如果存在
 
 class Flex {
     constructor(params) {
-        console.log(params)
         this.init(params);
         this.initState()
     }
@@ -116,7 +114,6 @@ class Flex {
         this.height = wrapperRect.height;
         this.width = wrapperRect.width;
 
-        console.log('---', children)
         this.style = wrapperStyle;
         let W = 'width';
         let H = 'height';
@@ -140,47 +137,7 @@ class Flex {
         this.Y = Y;
         this.FLEX_START = FLEX_START;
         this.FLEX_END = FLEX_END;
-        const fn = debounce((e) => {
-            const ele= e.target;
-            const isChangedFromInner=Boolean(ele.getAttribute('data-isflex'));
-            if(!isChangedFromInner){
-                console.log('DOMSubtreeModified-inner',ele)
-                //console.log(isChangedFromInner)
-            }else{
-                element.removeEventListener('DOMSubtreeModified', fn);
-                ele.removeAttribute('data-isflex')
-                setTimeout(()=>{
-                    element.addEventListener('DOMSubtreeModified', fn);
-                })
-            }
-            // new Flex({element, props})
-            //this.initState();
 
-            /* const style=getStyle(element);
-             const width=parseInt(style.width);
-             const height=parseInt(style.height);
-             if(width!==this.width||height!==this.height){
-                 this.width=width;
-                 this.height=height;
-                 console.log(this)
-                 this.initState(e.target);
-             }*/
-        }, 0);
-        const fn2 = debounce((e) => {
-            console.log('onresize')
-            const style = getStyle(element);
-            const width = parseInt(style.width);
-            const height = parseInt(style.height);
-            if (width !== this.width || height !== this.height) {
-                this.width = width;
-                this.height = height;
-                //this.initState();
-            }
-        }, 50);
-        //element.addEventListener('DOMSubtreeModified', fn);
-        /*if(element.attachEvent){
-            element.attachEvent('onresize',fn2);
-        }*/
     }
 
     initState() {
@@ -211,37 +168,6 @@ class Flex {
             const _transform = getTransform(node);
             let width = obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight);
             let height = obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom);
-            //console.log(node===target)
-            //console.log('parentNodeistrue',node.parentNode===target);
-            //说明父类在修改属性
-            /* if(node.parentNode===target){
-                 const p_style=getStyle(node);
-
-                 width=parseInt(getDataSet(node,'width'));
-                 height=parseInt(getDataSet(node,'height'));
-             }*/
-
-            //如果当前没有设置宽度
-            if (this.childrenComputedStyle[index].props && !computedStyle.width) {
-               /* console.log(this.childrenComputedStyle[index]);
-                const children = this.childrenComputedStyle[index].children;
-                console.log('设置宽度', children);
-                let have=false;
-                width=children.reduce((al, item) => {
-                    console.log(item)
-                    const rect = item.element.getBoundingClientRect();
-                    const _style = getStyle(item.element);
-                    const _width = rect.width + parseInt(_style.marginLeft) + parseInt(_style.marginRight)
-                    if (item.computedStyle.width && item.computedStyle.width.includes('%')) {
-                        have=true;
-                        return al;
-                    } else {
-                        return al+_width;
-                    }
-                }, 0);
-                width+=have?11.734:0;
-                console.log('设置宽度', width);*/
-            }
 
             const scrollTop = top < 0 ? 0 : document.documentElement.scrollTop;
             const alignSelf = computedStyle['align-self'] ? computedStyle['align-self'] : this.computedStyle['align-items'];
@@ -281,6 +207,9 @@ class Flex {
         const array = this.startLayout(flowBox);
 
         element.style['height'] = this.height + 'px';
+        element.setAttribute('data-origin', element.getAttribute('style'));
+        element.setAttribute('data-width', this.width+'px');
+        element.setAttribute('data-height', this.height+'px');
         this.flowLayoutBox = array;
         remakePos.forEach((it, index) => {
             const item = Flex.findByIndex(array, index);
@@ -300,12 +229,12 @@ class Flex {
         });
     }
     /**
-     * 
-     * @param {} item 
+     *
+     * @param {} item
      */
     getStretchMax(item) {
         const {H} = this;
-    
+
         return Math.max(...item.filter(item => !item.isFixed).map(a => a[H]))
     }
 
@@ -323,7 +252,6 @@ class Flex {
             const allFlexShrink = array.map(item => Number(item.props.flexShrink)).reduce((a, b) => a + b, 0);
             array = array.map(item => {
                 let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth, allRateGrow, allFlexShrink);
-                console.log(needAdd)
                 item.withOffset = -item.borderLeftWidth - item.borderRightWidth - item.marginLeft - item.marginRight - item.paddingLeft - item.paddingRight;
                 item.withOffset2 = needAdd;
                 return item;
@@ -458,7 +386,6 @@ class Flex {
             item.lineArray = this.setLineItemLocation(item, arr, it);
             return item
         });
-        console.log('开始布局---', arr)
         return arr
     }
 
@@ -708,28 +635,8 @@ class Flex {
 
 
     getChildren(children) {
-        console.log('children---', children)
         const {element} = this;
         let childNodes = Array.from(element.childNodes).filter(item => !(item.nodeType === 3 && /\s/.test(item.nodeValue) || item.nodeType === 8));
-        childNodes = childNodes.map((ele, index) => {
-            const alignItems = getCss(element).alignItems;
-            return {
-                element: ele,
-                classList: getClassList(ele),
-                computedStyle: this.childrenComputedStyle[index].computedStyle,
-                props: {
-                    flexDirection: getCss(ele).flexDirection,
-                    flexWrap: getCss(ele).flexWrap,
-                    alignItems,
-                    alignSelf: getCss(ele).alignSelf || alignItems,
-                    alignContent: getCss(ele).alignContent,
-                    justifyContent: getCss(ele).justifyContent,
-                    order: getCss(ele).order,
-                    flexShrink: getCss(ele).flexShrink,
-                    flexGrow: getCss(ele).flexGrow
-                }
-            }
-        });
         childNodes = childNodes.sort((a, b) => {
             const aOrder = a.props.order;
             const bOrder = b.props.order;
