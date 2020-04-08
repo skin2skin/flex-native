@@ -1,8 +1,8 @@
 {
-  "name": "flex-polyfill",
+  "name": "flexlayout-polyfill",
   "version": "1.0.0",
-  "description": "flex-polyfill",
-  "main": "dist/flex.polyfill.min.js",
+  "description": "flexlayout-polyfill",
+  "main": "dist/flexlayout.polyfill.min.js",
   "directories": {
     "test": "test"
   },

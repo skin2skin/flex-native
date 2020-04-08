@@ -1,4 +1,4 @@
-# flex-polyfill
+# flex-native
 English | [简体中文](./README-zh_CN.md)
 ### 🔗 Content list
 - [Background](#background)
@@ -27,16 +27,16 @@ English | [简体中文](./README-zh_CN.md)
  Since the transform attribute is used to calculate the location, any browser that supports the transform attribute supports it
 ### 📦 Installation
 ```bash
-npm install flex-polyfill
+npm install flex-native
 ```
 ### 🔨 Usage
 - Use in normal HTML
 ```javascript
-<script src='./flex-polyfill.min.js'>;
+<script src='./flex-native.min.js'>;
 ```
 - Use in module
 ```javascript
-import('flex-polyfill');
+import('flex-native');
 ```
 - css
 	<br>

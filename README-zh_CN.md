@@ -1,4 +1,4 @@
-# flex-polyfill
+# flex-native
  [English](./README.md)|简体中文 
 ### 🔗 内容列表
 - [背景](#背景)
@@ -22,16 +22,16 @@
  由于使用了transform 属性去计算位置 所以只要是支持transform属性的浏览器都支持
 ### 📦 安装
 ```bash
-npm install flex-polyfill
+npm install flex-native
 ```
 ### 🔨 使用
 - 在普通的HTML中使用
 ```javascript
-<script src='./flex-polyfill.min.js'>;
+<script src='./flex-native.min.js'>
 ```
 - 在模块化中使用
 ```javascript
-import('flex-polyfill');
+import('flex-native');
 ```
 - CSS中
 	<br>
