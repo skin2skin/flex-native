@@ -1,8 +1,8 @@
 {
-  "name": "flexlayout-polyfill",
+  "name": "flex-native",
   "version": "1.0.0",
   "description": "flexlayout-polyfill",
-  "main": "dist/flexlayout.polyfill.min.js",
+  "main": "dist/flex.native.min.js",
   "directories": {
     "test": "test"
   },
@@ -24,15 +24,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/robertpanvip/flex-polyfill.git"
+    "url": "git+https://github.com/robertpanvip/flex-native.git"
   },
   "browserslist": "> 5%, ie >= 9, chrome >= 62",
   "author": "pan",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/robertpanvip/flex-polyfill/issues"
+    "url": "https://github.com/robertpanvip/flex-native/issues"
   },
-  "homepage": "https://github.com/robertpanvip/flex-polyfill#readme",
+  "homepage": "https://github.com/robertpanvip/flex-native#readme",
   "dependencies": {
     "core-js": "^3.6.4"
   }

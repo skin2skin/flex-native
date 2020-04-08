@@ -10,7 +10,7 @@ module.exports = {
     output: {
         publicPath: '/',
         path: path.resolve(__dirname, '.', 'dist'),
-        filename: 'flex.polyfill.min.js',
+        filename: 'flex.native.min.js',
     },
     module: {
         rules: [
