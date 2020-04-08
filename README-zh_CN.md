@@ -38,7 +38,9 @@ import('flex-polyfill');
 	.wrapper{     
 		display:flex;
 		align-items:center;
-		justify-content:center;}
+		justify-content:center;
+		<br>
+		}
 		
 - 元素上
 	<br>

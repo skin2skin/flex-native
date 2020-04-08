@@ -43,7 +43,9 @@ import('flex-polyfill');
 	.wrapper{     
 		display:flex;
 		align-items:center;
-		justify-content:center;}
+		justify-content:center;
+		<br>
+		}
 - inline
 	<br>
 	&lt;div style='display:flex;align-items:center&gt;
