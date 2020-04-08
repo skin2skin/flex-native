@@ -33,14 +33,14 @@ npm install flex-polyfill
 ```javascript
 import('flex-polyfill');
 ```
-- 样本
-	- CSS中
+- CSS中
 	<br>
 	.wrapper{     
 		display:flex;
 		align-items:center;
 		justify-content:center;}
-	- 元素上
+		
+- 元素上
 	<br>
 	&lt;div style='display:flex;align-items:center&gt;
 	<br>

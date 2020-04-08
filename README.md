@@ -38,14 +38,13 @@ npm install flex-polyfill
 ```javascript
 import('flex-polyfill');
 ```
-- demo
-	- css
+- css
 	<br>
 	.wrapper{     
 		display:flex;
 		align-items:center;
 		justify-content:center;}
-	- inline
+- inline
 	<br>
 	&lt;div style='display:flex;align-items:center&gt;
 	<br>
