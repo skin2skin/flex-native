@@ -1,9 +1,8 @@
 //内联元素
 import {
-    createTransform, debounce, getClassList, getCss, getDataSet, getPrefixAndProp, getStyle,
+    createTransform, getPrefixAndProp, getStyle,
     getTransform, setInner
 } from "./utils";
-import {isFlexBox} from "./readAll";
 
 const inlineArr = ['a',
     'abbr',
@@ -138,7 +137,7 @@ class Flex {
         this.Y = Y;
         this.FLEX_START = FLEX_START;
         this.FLEX_END = FLEX_END;
-    
+
     }
 
     initState() {
@@ -169,7 +168,7 @@ class Flex {
             const _transform = getTransform(node);
             let width = obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight);
             let height = obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom);
-          
+
             const scrollTop = top < 0 ? 0 : document.documentElement.scrollTop;
             const alignSelf = computedStyle['align-self'] ? computedStyle['align-self'] : this.computedStyle['align-items'];
             const flexGrow = computedStyle['flex-grow'] || Flex.defaultProps.flexGrow;
@@ -208,6 +207,9 @@ class Flex {
         const array = this.startLayout(flowBox);
 
         element.style['height'] = this.height + 'px';
+        element.setAttribute('data-origin', element.getAttribute('style'));
+        element.setAttribute('data-width', this.width+'px');
+        element.setAttribute('data-height', this.height+'px');
         this.flowLayoutBox = array;
         remakePos.forEach((it, index) => {
             const item = Flex.findByIndex(array, index);
@@ -227,12 +229,12 @@ class Flex {
         });
     }
     /**
-     * 
-     * @param {} item 
+     *
+     * @param {} item
      */
     getStretchMax(item) {
         const {H} = this;
-    
+
         return Math.max(...item.filter(item => !item.isFixed).map(a => a[H]))
     }
 
@@ -635,25 +637,6 @@ class Flex {
     getChildren(children) {
         const {element} = this;
         let childNodes = Array.from(element.childNodes).filter(item => !(item.nodeType === 3 && /\s/.test(item.nodeValue) || item.nodeType === 8));
-        childNodes = childNodes.map((ele, index) => {
-            const alignItems = getCss(element).alignItems;
-            return {
-                element: ele,
-                classList: getClassList(ele),
-                computedStyle: this.childrenComputedStyle[index].computedStyle,
-                props: {
-                    flexDirection: getCss(ele).flexDirection,
-                    flexWrap: getCss(ele).flexWrap,
-                    alignItems,
-                    alignSelf: getCss(ele).alignSelf || alignItems,
-                    alignContent: getCss(ele).alignContent,
-                    justifyContent: getCss(ele).justifyContent,
-                    order: getCss(ele).order,
-                    flexShrink: getCss(ele).flexShrink,
-                    flexGrow: getCss(ele).flexGrow
-                }
-            }
-        });
         childNodes = childNodes.sort((a, b) => {
             const aOrder = a.props.order;
             const bOrder = b.props.order;

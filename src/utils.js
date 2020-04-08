@@ -34,27 +34,6 @@ export function getStyle(ele) {
 }
 
 /**
- * 从style中的cssText中获取实际值
- */
-export function getPropsFromStyleText(cssText, prop) {
-    if (!cssText) {
-        return undefined
-    }
-    const strArr = cssText.split(';');
-    let res = undefined;
-    const reg1 = new RegExp(`${prop}:(.*)`);
-    for (let i = 0; i < strArr.length; i++) {
-        const item = strArr[i];
-        const res1 = item.match(reg1);
-        if (res1) {
-            res = res1[1].trim();
-            break;
-        }
-    }
-    return res;
-}
-
-/**
  * 创建偏移
  * @param flowBoxItem
  * @returns {*}
@@ -160,52 +139,6 @@ export function supportsFlexBox() {
     return test.style.display === 'flex';
 }
 
-export function getCss(element) {
-    let cssText = element.getAttribute ? element.getAttribute('style') : '';
-    let style = getStyle(element);
-    const flexFlow = getPropsFromStyleText(cssText, 'flex-flow') || style['flex-flow'] || '';
-    const _flexFlow = flexFlow.trim().match(/([^ ]*)\s*([^ ]*)/);
-    const _flexDirection = _flexFlow[1].trim();
-    const _flexWrap = _flexFlow[2].trim();
-    let flex = getPropsFromStyleText(cssText, 'flex') || style['flex'] || '';
-    if (flex === 'auto') {
-        flex = '1 1 auto';
-    }
-    if (flex === 'none') {
-        flex = '0 0 auto';
-    }
-    const _flex = flex.trim().match(/([^ ]*)\s*([^ ]*)\s*([^ ]*)/);
-    let _flexGrow = _flex[1];
-    let _flexShrink = _flex[2];
-
-
-    let styleProps = {
-        flexDirection: getPropsFromStyleText(cssText, 'flex-direction') || style['flex-direction'],
-        flexWrap: getPropsFromStyleText(cssText, 'flex-wrap') || style['flex-wrap'], //默认不换行
-        alignItems: getPropsFromStyleText(cssText, 'align-items') || style['align-items'],
-        alignSelf: getPropsFromStyleText(cssText, 'align-self') || style['align-self'],
-        alignContent: getPropsFromStyleText(cssText, 'align-content') || style['align-content'],
-        justifyContent: getPropsFromStyleText(cssText, 'justify-content') || style['justify-content'], //默认左对齐
-        order: getPropsFromStyleText(cssText, 'order') || style['order'],
-        flexShrink: getPropsFromStyleText(cssText, 'flex-shrink') || style['flex-shrink'],
-        flexGrow: getPropsFromStyleText(cssText, 'flex-grow') || style['flex-grow']
-    };
-    styleProps = {
-        flexDirection: getDefaultProp(styleProps, 'flexDirection', _flexDirection),
-        flexWrap: getDefaultProp(styleProps, 'flexWrap', _flexWrap), //默认不换行
-        alignItems: getDefaultProp(styleProps, 'alignItems'),
-        alignSelf: getDefaultProp(styleProps, 'alignSelf'),
-        alignContent: getDefaultProp(styleProps, 'alignContent'),
-        justifyContent: getDefaultProp(styleProps, 'justifyContent'), //默认左对齐
-        order: getDefaultProp(styleProps, 'order'),
-        flexShrink: getDefaultProp(styleProps, 'flexShrink', _flexShrink),
-        flexGrow: getDefaultProp(styleProps, 'flexGrow', _flexGrow)
-    };
-
-
-    return styleProps
-}
-
 /**
  * 获取dataSet的兼容写法
  */
@@ -243,7 +176,7 @@ export function getStyleFromCssText(styleText){
 /**
  * 获取真实的style
  */
-function getRealStyle(element){
+function getRealStyle(element,excludeStyle){
     const preWithText=getDataSet(element,'width')||'';
     if(!preWithText){
         return getStyleFromCssText(element.getAttribute('style') || '');
@@ -253,16 +186,24 @@ function getRealStyle(element){
         const style=getStyleFromCssText(styleText);
         const oriStyleText=getDataSet(element,'origin')||'';
         const oriStyle=getStyleFromCssText(oriStyleText);
-        //todo 有可能设的宽度或者高度和我之前计算出来的高度一致 就有bug
-        if(style.width===preWithText){
-            element.style.width=oriStyle.width
+        if(excludeStyle.width&&(excludeStyle.width.includes('%')||excludeStyle.width.includes('vw')||excludeStyle.width.includes('vw')||excludeStyle.width.includes('rem')||excludeStyle.width.includes('em'))){
+            element.style.width=excludeStyle.width
         }else{
-            element.style.width=style.width
+            //todo 有可能设的宽度或者高度和我之前计算出来的高度一致 就有bug
+            if(style.width===preWithText){
+                element.style.width=oriStyle.width
+            }else{
+                element.style.width=style.width
+            }
         }
-        if(style.height===preHeightText){
-            element.style.height=oriStyle.height
+        if(excludeStyle.height&&(excludeStyle.height.includes('%')||excludeStyle.height.includes('vw')||excludeStyle.height.includes('vw')||excludeStyle.height.includes('rem')||excludeStyle.height.includes('em'))){
+            element.style.height=excludeStyle.height
         }else{
-            element.style.height=style.height
+            if(style.height===preHeightText){
+                element.style.height=oriStyle.height
+            }else{
+                element.style.height=style.height
+            }
         }
 
 
@@ -282,6 +223,7 @@ export function getComputedStyleByCss(element, css) {
     if (!dataSetText) {
         return {}
     }
+    const selectors = JSON.parse(dataSetText);
     css = css.map(item => {
         const weights = getWeights(item.selector);
         item.weights = {
@@ -290,8 +232,6 @@ export function getComputedStyleByCss(element, css) {
         };
         return item
     });
-
-    const style =getRealStyle(element) ;
     let res = {};
     const importantSelector = (obj, selector) => {
         Object.keys(obj).map(key => {
@@ -306,13 +246,14 @@ export function getComputedStyleByCss(element, css) {
         });
         return obj
     };
-    const selectors = JSON.parse(dataSetText);
+
     const _css = [...css].sort((a, b) => b.weights.int - a.weights.int);
     _css.forEach(item => {
         if (selectors.includes(item.selector)) {
             importantSelector(item[item.selector], item.selector)
         }
     });
+    const style =getRealStyle(element,res) ;
     return {
         ...res,
         ...style
@@ -391,6 +332,11 @@ export function observerDocument(targetNode,callback) {
         observer.observe(targetNode, config);
     }else {
         targetNode.addEventListener('DOMSubtreeModified', callback);
+    }
+    if(window.attachEvent){
+        window.attachEvent('onresize', callback);
+    }else{
+        window.addEventListener('resize', callback);
     }
 }
 

@@ -1,4 +1,4 @@
-import { getClassList, getComputedStyleByCss, getCss, getDataSet, getDefaultProp, getStyle, getStyleFromCssText } from "./utils";
+import { getClassList, getComputedStyleByCss, getDefaultProp, getStyleFromCssText } from "./utils";
 
 let displayFlexMatch = /(^|;)\s*display\s*:\s*(inline-)?flex\s*(;|$)/i;
 let flexMatch = /^(inline-)?flex/i;
@@ -10,6 +10,7 @@ export function isFlexBox(element, style) {
     // whether the element has a current style and -js-display declaration
     let currentStyleJsDisplay = isElement && (style['-js-display'] || style['display']);
     if (flexMatch.test(currentStyleJsDisplay)) {
+        //inline-flex的处理
         if (currentStyleJsDisplay && currentStyleJsDisplay.includes('inline-flex')) {
             let text = element.getAttribute('style') || '';
             if(!text.includes('display')){
@@ -55,8 +56,6 @@ export default function readAll(element, css) {
     let childNode;
 
     if (isDisplayFlex) {
-        //const flexId = getDataSet(element.parentNode, 'flex') || 0;
-        //element.setAttribute('data-flex', `${flexId}-${index}`);
         let alignSelf = 'stretch';
         if (isFlexBox(element.parentNode, css)) {
             const _props = getComputedStyleByCss(element.parentNode, css);
