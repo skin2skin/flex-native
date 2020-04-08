@@ -11,8 +11,9 @@
             background: grey;
         }
         .wrapper {
-            width: 800px;
+            width:600px;
             border: 5px solid #cccccc;
+            margin: 10px;
         }
 
         * {
@@ -29,7 +30,7 @@
         }
 
         .box {
-            width: 500px;
+            width: 200px;
             height: 100px;
             color: blue;
         }
@@ -45,7 +46,7 @@
         }
 
         .etty {
-            display: flex;
+            display: inline-flex;
             flex-wrap: nowrap;
             /* align-items: center*/
             /* justify-content: center;  */
@@ -67,15 +68,15 @@
             border: 1px solid #cccccc;
         }
         .etty>div {
-            width: 400px;
+            width: 10%;
         }
     </style>
 
 </head>
 
-<body>
-    <div>
-        <div class="wrapper etty">
+<body style="opacity: 0;">
+    <div >
+        <div class="wrapper etty" style="display: inline-flex !important;">
             <div class="box" style="flex-shrink:2;">1</div>
             <div class="box2" style="flex-shrink:2;">2</div>
             <div class="box2" style="flex-shrink:6;">2</div>
@@ -109,11 +110,10 @@
             }
         },
         mounted:function () {
-            console.log(this);
             var _this=this;
             setTimeout(function () {
                 _this.styleObject.width='100px'
-            },3000);
+            },1000);
         }
     })
 

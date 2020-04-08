@@ -229,7 +229,7 @@ export function getClassList(element) {
  * @param styleText
  * @returns {{}}
  */
-function getStyleFromCssText(styleText){
+export function getStyleFromCssText(styleText){
     let style = {};
     styleText.split(';').map(item => {
         if (item.trim() !== '') {
