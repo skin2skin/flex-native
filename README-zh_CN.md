@@ -39,8 +39,7 @@ import('flex-polyfill');
 	.wrapper{     
 		display:flex;
 		align-items:center;
-		justify-content:center;
-};
+		justify-content:center;}
 	- 元素上
 	<br>
 	&lt;div style='display:flex;align-items:center&gt;
