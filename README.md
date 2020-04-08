@@ -1,15 +1,15 @@
 # flex-polyfill
 English | [简体中文](./README-zh_CN.md)
 ### 🔗 内容列表
-- [Background](#Background)
+- [Background](#background)
 
-- [Environment Support](#🖥Environment Support)
+- [Environment Support](#environment-support)
 
-- [Installation](#📦Installation)
+- [Installation](#installation)
 
-- [Usage](#🔨Usage)
+- [Usage](#usage)
 
-- [Contributor](#🤝Contributor)
+- [Contributor](#contributor)
 
 ### Background
 - Because most of the previously written projects use flex layout, and when they arrive at a new company, they start to make IE9 compatible, while flex layout only supports ie10 +, so it's not so convenient to implement a middle layout in IE9. Although it can also be implemented with other layouts, it's not so skilled, and the development efficiency is reduced
@@ -17,7 +17,7 @@ English | [简体中文](./README-zh_CN.md)
 - I found a lot of libraries on the Internet about using flex layout in IE9, but almost all of them were not ideal, so I wanted to realize a library supporting flex box layout by myself
 
 
-### 🖥Environment Support
+### 🖥 Environment Support
  - Modern browser and IE9+
 
 | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="IE / Edge" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br>IE / Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png" alt="Firefox" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br>Firefox | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br>Chrome | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png" alt="Safari" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br>Safari |
@@ -25,11 +25,11 @@ English | [简体中文](./README-zh_CN.md)
 | IE9+, Edge | 3.5+ | all | all |
 
  Since the transform attribute is used to calculate the location, any browser that supports the transform attribute supports it
-### 📦Installation
+### 📦 Installation
 ```bash
 npm install flex-polyfill
 ```
-### 🔨Usage
+### 🔨 Usage
 - Use in normal HTML
 ```javascript
 <script src='./flex-polyfill.min.js'>;
@@ -51,7 +51,7 @@ import('flex-polyfill');
 ```
 Generally speaking, it's no different from writing CSS
 
-### 🤝Contributor
+### 🤝 Contributor
 [@robertpanvip](https://github.com/robertpanvip)
 <br>
 [@1844877065](https://github.com/1844877065)
