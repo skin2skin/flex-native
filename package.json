@@ -1,6 +1,6 @@
 {
   "name": "flex-native",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "flexlayout-polyfill",
   "main": "dist/flex.native.min.js",
   "directories": {
