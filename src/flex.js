@@ -91,26 +91,20 @@ class Flex {
     };
 
     init({element, props, classList, computedStyle, children}) {
-
-        //const childAst = this.getChildren(children);
-
         this.props = props;
         this.element = element;
         this.classList = classList;
         this.computedStyle = computedStyle;
         this.children = children;
-        this.childrenComputedStyle = children;
         const {flexDirection, flexWrap} = props;
         const wrapperStyle = getStyle(element);
         let wrapperRect = element.getBoundingClientRect();
         wrapperRect = {
-            left: wrapperRect.left + parseInt(wrapperStyle.paddingLeft),
-            top: wrapperRect.top + parseInt(wrapperStyle.paddingTop),
             width: wrapperRect.width - parseInt(wrapperStyle.paddingLeft) - parseInt(wrapperStyle.paddingRight) - parseInt(wrapperStyle.borderLeftWidth) - parseInt(wrapperStyle.borderRightWidth),
             height: wrapperRect.height - parseInt(wrapperStyle.paddingTop) - parseInt(wrapperStyle.paddingBottom) - parseInt(wrapperStyle.borderTopWidth) - parseInt(wrapperStyle.borderBottomWidth)
         };
-        this.left = wrapperRect.left;
-        this.top = wrapperRect.top;
+        this.left = element.offsetLeft;
+        this.top = element.offsetTop;
         this.height = wrapperRect.height;
         this.width = wrapperRect.width;
 
@@ -141,13 +135,18 @@ class Flex {
     }
 
     initState() {
-        const {style: wrapperStyle, left, top, element} = this;
-        const { flexDirection } = this.props;
-        let _children = Array.from(element.childNodes).filter(ele => ele instanceof Element);
-        const remakePos = _children.map((node, index) => {
-            const obj = node.getBoundingClientRect();
-            const style = getStyle(node);
-            const computedStyle = this.childrenComputedStyle[index].computedStyle;
+        const {style: wrapperStyle, left, top, element, children} = this;
+        const {flexDirection} = this.props;
+        let _children = children.sort((a, b) => {
+            const aOrder = a.computedStyle.order || 1;
+            const bOrder = b.computedStyle.order || 1;
+            return Number(aOrder) - Number(bOrder);
+        });
+        const remakePos = _children.map(item => {
+
+            const obj = item.element.getBoundingClientRect();
+            const style = getStyle(item.element);
+            const computedStyle = item.computedStyle;
 
             //排除掉fixed等影响布局的
             const isFixed = (style.position === 'absolute' || style.position === 'fixed');
@@ -165,16 +164,13 @@ class Flex {
                     y: 0,
                 }
             }
-            const _transform = getTransform(node);
             let width = obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight);
             let height = obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom);
-
-            const scrollTop = top < 0 ? 0 : document.documentElement.scrollTop;
             const alignSelf = computedStyle['align-self'] ? computedStyle['align-self'] : this.computedStyle['align-items'];
             const flexGrow = computedStyle['flex-grow'] || Flex.defaultProps.flexGrow;
             const flexShrink = computedStyle['flex-shrink'] || Flex.defaultProps.flexShrink;
             return {
-                element: node,
+                element: item.element,
                 computedStyle,
                 isFixed,
                 props: {
@@ -192,42 +188,46 @@ class Flex {
                 notPercentWidth: computedStyle['width'] && computedStyle['width'].includes('%') ? 0 : width,
                 width: width,
                 height: height,
-                x: _transform.x - (obj.left - parseInt(style.marginLeft) - parseInt(wrapperStyle.borderLeftWidth) - left),
-                y: _transform.y - (obj.top - parseInt(style.marginTop) - parseInt(wrapperStyle.borderLeftWidth) - top + scrollTop),
+                x: -(item.element.offsetLeft - parseInt(style.marginLeft) - parseInt(wrapperStyle.borderLeftWidth) - left),
+                y: -(item.element.offsetTop - parseInt(style.marginTop) - parseInt(wrapperStyle.borderLeftWidth) - top),
             }
         }).filter((item) => !item.isFixed);
+        //创建流动布局
         const flowBox = this.createFlowBox(remakePos);
+
         this.height = this.computedStyle.height ? this.height : flowBox.reduce((al, b) => {
             if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
-                return al+b.lineArrayWidth
+                return al + b.lineArrayWidth
             } else {
                 return al + b.max
             }
         }, 0);
+        //开始布局
         const array = this.startLayout(flowBox);
 
-        element.style['height'] = this.height + 'px';
+        element.style['height'] = this.height.toFixed(6) + 'px';
         element.setAttribute('data-origin', element.getAttribute('style'));
-        element.setAttribute('data-width', this.width+'px');
-        element.setAttribute('data-height', this.height+'px');
+        element.setAttribute('data-width', this.width.toFixed(6) + 'px');
+        element.setAttribute('data-height', this.height.toFixed(6) + 'px');
         this.flowLayoutBox = array;
         remakePos.forEach((it, index) => {
             const item = Flex.findByIndex(array, index);
             const {element} = item;
             element.style[getPrefixAndProp('transform')] = createTransform(item);
             const acWidth = item[this.W] + item.withOffset;
-            element.style[this.W] = (acWidth < 0 ? 0 : acWidth) + 'px';
+            element.style[this.W] = (acWidth < 0 ? 0.000000 : acWidth.toFixed(6)) + 'px';
 
             const itemPrams = this.children[index];
             if (itemPrams.props) {
                 new Flex(this.children[index])
             }
             element.setAttribute('data-origin', element.getAttribute('style'));
-            element.setAttribute('data-width', item.width+'px');
-            element.setAttribute('data-height', item.height+'px');
-            setInner(true);
+            element.setAttribute('data-width', item.width.toFixed(6) + 'px');
+            element.setAttribute('data-height', item.height.toFixed(6) + 'px');
         });
+        setInner(true);
     }
+
     /**
      *
      * @param {} item

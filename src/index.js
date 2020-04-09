@@ -5,14 +5,15 @@ import parseCss, {setCssSelector} from "./parseCss";
 import Flex from "./flex";
 
 const fn = debounce(main, 50);
+document.body.style.opacity = 0;
 
-const update = debounce(() => {
+const update = debounce((e) => {
     const isChangedFromInner=getInner();
     if(!isChangedFromInner){
         main();
     }
     setInner(false);
-}, 30);
+}, 50);
 
 fn();
 //监听dom变化
@@ -27,7 +28,6 @@ function main() {
         render(flexBox);
         document.body.style.opacity = 1;
     })
-
 }
 
 /**

@@ -61,8 +61,7 @@ export default function readAll(element, css) {
             const _props = getComputedStyleByCss(element.parentNode, css);
             alignSelf = _props['align-items'] || getDefaultProp('alignItems')
         }
-        const props = getComputedStyleByCss(element, css);
-
+        const props = computedStyle;
         _ele = {
             element,
             tag: element.localName,

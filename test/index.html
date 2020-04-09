@@ -11,9 +11,11 @@
             background: grey;
         }
         .wrapper {
-            width:40%;
+            width:80%;
             border: 5px solid #cccccc;
             margin: 10px;
+            margin-left: 30px;
+            padding: 10px;
         }
 
         * {
@@ -27,12 +29,15 @@
 
         .wrapper-inner {
             height: 400px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
         }
 
         .box {
             width: 200px;
             height: 100px;
-            color: blue;
+            color: blue!important;
         }
 
         .box2 {
@@ -46,7 +51,7 @@
         }
 
         .etty {
-            display: inline-flex;
+            display: flex;
             flex-wrap: nowrap;
             /* align-items: center*/
             /* justify-content: center;  */
@@ -74,19 +79,22 @@
 
 </head>
 
-<body style="opacity: 0;">
+<body>
     <div >
         <div class="wrapper etty" style="display: inline-flex !important;">
+            <div class="box" style="flex-shrink:2;order: 3">1</div>
+            <div class="box2" style="flex-shrink:2;order: 2">2</div>
+            <div class="box2" style="flex-shrink:6;order: 1">3</div>
+        </div>
+        <div class="wrapper etty">
             <div class="box" style="flex-shrink:2;">1</div>
             <div class="box2" style="flex-shrink:2;">2</div>
             <div class="box2" style="flex-shrink:6;">2</div>
-
-
-            <!-- <div class="wrapper-inner" style="order: 6;">
-                <div class="box" style="order: 1;">1</div>
-                <div class="box2" style="order: 2;">2</div>
-                <div class="box3" style="order: 3;">3</div>
-            </div> -->
+        </div>
+        <div class="wrapper etty">
+            <div class="box" style="flex-shrink:2;">1</div>
+            <div class="box2" style="flex-shrink:2;">2</div>
+            <div class="box2" style="flex-shrink:6;">2</div>
         </div>
         <div class="wrapper etty">
             <div class="box" style="flex-shrink:2;">1</div>

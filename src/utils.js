@@ -178,9 +178,7 @@ export function getStyleFromCssText(styleText){
  */
 function getRealStyle(element,excludeStyle){
     const preWithText=getDataSet(element,'width')||'';
-    if(!preWithText){
-        return getStyleFromCssText(element.getAttribute('style') || '');
-    }else{
+    if(preWithText){
         const preHeightText=getDataSet(element,'height')||'';
         const styleText=element.getAttribute('style')||'';
         const style=getStyleFromCssText(styleText);
@@ -205,9 +203,9 @@ function getRealStyle(element,excludeStyle){
                 element.style.height=style.height
             }
         }
-
-
+        setInner(true);
     }
+    return  getStyleFromCssText(element.getAttribute('style') || '');
 
 }
 
@@ -247,7 +245,7 @@ export function getComputedStyleByCss(element, css) {
         return obj
     };
 
-    const _css = [...css].sort((a, b) => b.weights.int - a.weights.int);
+    const _css = [...css].sort((a, b) => a.weights.int - b.weights.int);
     _css.forEach(item => {
         if (selectors.includes(item.selector)) {
             importantSelector(item[item.selector], item.selector)
