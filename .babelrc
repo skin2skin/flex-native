@@ -1,7 +1,13 @@
 {
   "presets": [["@babel/preset-env",{
-    "corejs":3,
-    "useBuiltIns": "entry"
+    "corejs": {
+        "version": 3,
+        "proposals": true
+    },
+    "useBuiltIns": "usage",
+    "targets": {
+         "browsers": "ie 9"
+    }
   }]],
    "plugins": ["@babel/plugin-proposal-class-properties"]
 }

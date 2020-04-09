@@ -1,4 +1,4 @@
-import 'core-js'
+
 import {debounce, getInner, observerDocument, setInner} from './utils'
 import readAll from "./readAll";
 import parseCss, {setCssSelector} from "./parseCss";
