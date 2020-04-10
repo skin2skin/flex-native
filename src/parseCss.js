@@ -15,6 +15,7 @@ export default function parseCss(document) {
             item.cssText.split('}').filter(item => item.trim() !== '').forEach(item => {
                 const _item = item + '}';
                 const selectorText = _item.match(/([^{]*){([^}]*)}/)[1].trim();
+                console.log(selectorText)
                 const weights = getWeights(selectorText);
                 all.push({
                     cssText: _item.trim(),
@@ -111,7 +112,7 @@ function getDetailRule(rule) {
         const text = match[1];
         text.split(';').filter(item => item.trim() !== '').forEach(item => {
             const i = item.indexOf(':');
-            let key = item.slice(0, i)
+            let key = item.slice(0, i).trim()
             let value = item.slice(i + 1) || '';
             res[key] = value.trim()
         });
