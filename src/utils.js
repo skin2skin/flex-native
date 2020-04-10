@@ -47,6 +47,17 @@ export function createTransform(flowBoxItem) {
 
 }
 
+export function getDefaultStyle(props, key, key2) {
+    if (!props[key] || props[key] === 'normal' || props[key] === 'auto') {
+        if (!key2) {
+            return null;
+        }
+        return Flex.defaultProps[key2]
+    } else {
+        return props[key]
+    }
+}
+
 /**
  * 得到偏移
  * @returns {*}
@@ -71,12 +82,12 @@ export function getTransform(element) {
  */
 export function getDefaultProp(key, props) {
     if (props) {
-        const _res={};
-        const flexFlow = props[ 'flex-flow']||'';
+        const _res = {};
+        const flexFlow = props['flex-flow'] || '';
         _res.flexFlow = flexFlow.trim().match(/([^ ]*)\s*([^ ]*)/);
         _res.flexDirection = _res.flexFlow[1].trim();
         _res.flexWrap = _res.flexFlow[2].trim();
-        let flex = props[ 'flex'] || '';
+        let flex = props['flex'] || '';
         if (flex === 'auto') {
             flex = '1 1 auto';
         }
@@ -162,7 +173,7 @@ export function getClassList(element) {
  * @param styleText
  * @returns {{}}
  */
-export function getStyleFromCssText(styleText){
+export function getStyleFromCssText(styleText) {
     let style = {};
     styleText.split(';').map(item => {
         if (item.trim() !== '') {
@@ -176,48 +187,49 @@ export function getStyleFromCssText(styleText){
 /**
  * 获取真实的style
  */
-function getRealStyle(element,excludeStyle){
-    const preWithText=getDataSet(element,'width')||'';
-    if(preWithText){
-        const preHeightText=getDataSet(element,'height')||'';
-        const styleText=element.getAttribute('style')||'';
-        const style=getStyleFromCssText(styleText);
-        const oriStyleText=getDataSet(element,'origin')||'';
-        const oriStyle=getStyleFromCssText(oriStyleText);
-        if(excludeStyle.width&&(excludeStyle.width.includes('%')||excludeStyle.width.includes('vw')||excludeStyle.width.includes('vw')||excludeStyle.width.includes('rem')||excludeStyle.width.includes('em'))){
-            element.style.width=excludeStyle.width
-        }else{
+function getRealStyle(element, excludeStyle) {
+    const preWithText = getDataSet(element, 'width') || '';
+    if (preWithText) {
+        const preHeightText = getDataSet(element, 'height') || '';
+        const styleText = element.getAttribute('style') || '';
+        const style = getStyleFromCssText(styleText);
+        const oriStyleText = getDataSet(element, 'origin') || '';
+        const oriStyle = getStyleFromCssText(oriStyleText);
+        if (excludeStyle.width && (excludeStyle.width.includes('%') || excludeStyle.width.includes('vw') || excludeStyle.width.includes('vw') || excludeStyle.width.includes('rem') || excludeStyle.width.includes('em'))) {
+            element.style.width = excludeStyle.width
+        } else {
             //todo 有可能设的宽度或者高度和我之前计算出来的高度一致 就有bug
-            if(style.width===preWithText){
-                element.style.width=oriStyle.width
-            }else{
-                element.style.width=style.width
+            if (style.width === preWithText) {
+                element.style.width = oriStyle.width
+            } else {
+                element.style.width = style.width
             }
         }
-        if(excludeStyle.height&&(excludeStyle.height.includes('%')||excludeStyle.height.includes('vw')||excludeStyle.height.includes('vw')||excludeStyle.height.includes('rem')||excludeStyle.height.includes('em'))){
-            element.style.height=excludeStyle.height
-        }else{
-            if(style.height===preHeightText){
-                element.style.height=oriStyle.height
-            }else{
-                element.style.height=style.height
+        if (excludeStyle.height && (excludeStyle.height.includes('%') || excludeStyle.height.includes('vw') || excludeStyle.height.includes('vw') || excludeStyle.height.includes('rem') || excludeStyle.height.includes('em'))) {
+            element.style.height = excludeStyle.height
+        } else {
+            if (style.height === preHeightText) {
+                element.style.height = oriStyle.height
+            } else {
+                element.style.height = style.height
             }
         }
         setInner(true);
     }
-    return  getStyleFromCssText(element.getAttribute('style') || '');
+    return getStyleFromCssText(element.getAttribute('style') || '');
 
 }
 
 /**
  * 获取计算后的css
  */
-export function getComputedStyleByCss(element, css) {
+export function getComputedStyleByCss(element) {
     let isElement = element instanceof Element;
     if (!isElement) {
         return {}
     }
-    const dataSetText=getDataSet(element, 'class');
+
+    const dataSetText = getDataSet(element, 'class');
     if (!dataSetText) {
         return {}
     }
@@ -244,7 +256,7 @@ export function getComputedStyleByCss(element, css) {
             importantSelector(item[item.selector], item.selector)
         }
     });
-    const style =getRealStyle(element,res) ;
+    const style = getRealStyle(element, res);
     return {
         ...res,
         ...style
@@ -269,13 +281,13 @@ export function getWeights(selector) {
             }
             const itemSelector = stack.join('').trim();
             //id
-            if (itemSelector[0]==='#') {
+            if (itemSelector[0] === '#') {
                 weights[1] = weights[1] + 1;
                 //类选择器、属性选择器或伪类
-            } else if (itemSelector[0]==='.' || itemSelector[0]===':' || itemSelector[0]==='[') {
+            } else if (itemSelector[0] === '.' || itemSelector[0] === ':' || itemSelector[0] === '[') {
                 weights[2] = weights[2] + 1;
                 //通配选择器
-            } else if (itemSelector[0]==='>' || itemSelector[0]==='~' || itemSelector[0]==='+' || itemSelector[0]==='*') {
+            } else if (itemSelector[0] === '>' || itemSelector[0] === '~' || itemSelector[0] === '+' || itemSelector[0] === '*') {
                 //元素和伪元素
             } else {
                 weights[3] = weights[3] + 1;
@@ -298,48 +310,71 @@ export function ipToInt(ip = [0, 0, 0, 0]) {
     return ip[3] + ip[2] * 256 + ip[1] * 256 * 256 + ip[0] * 256 * 256 * 256
 }
 
-/**
- * 监听dom变化
- */
-export function observerDocument(targetNode,callback) {
-//统一兼容问题
+export function Observer(callback) {
+    let observer = {};
+    const config = {attributes: true, childList: true, subtree: true};
+    //统一兼容问题
     let MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
     //判断浏览器是或否支持MutationObserver;
-    if(!!MutationObserver){
-        const config = { attributes: true, childList: true, subtree: true };
-        const observer = new MutationObserver(function(mutationsList, observer) {
+    if (!!MutationObserver) {
+        observer = new MutationObserver(function (mutationsList, observer) {
+            console.log(mutationsList,observer)
+            callback(mutationsList)
             // Use traditional 'for loops' for IE 11
-            for(let mutation of mutationsList) {
+            /*for (let mutation of mutationsList) {
+                console.log(mutation)
                 if (mutation.type === 'childList') {
                     //A child node has been added or removed.
-                    callback()
+                    callback(mutation.target)
                 }
                 else if (mutation.type === 'attributes') {
                     //'The ' + mutation.attributeName + ' attribute was modified.'
-                    callback()
+                    callback(mutation.target)
                 }
-            }
+            }*/
         });
         // Start observing the target node for configured mutations
-        observer.observe(targetNode, config);
-    }else {
-        targetNode.addEventListener('DOMSubtreeModified', callback);
+
+    } else {
+        const call=(e)=>{callback(e.target)}
+        observer = {
+            observe: () => {
+                document.addEventListener('DOMSubtreeModified', call);
+            },
+            disconnect: () => {
+                document.removeEventListener('DOMSubtreeModified', call);
+            }
+        };
     }
-    if(window.attachEvent){
+    if (window.attachEvent) {
         window.attachEvent('onresize', callback);
-    }else{
+    } else {
         window.addEventListener('resize', callback);
     }
+    return {
+        observer: () => {
+            observer.observe(document, config);
+        },
+        disconnect: () => {
+            observer.disconnect();
+        }
+    }
+}
+
+/**
+ * 监听dom变化
+ */
+export function observerDocument(targetNode, callback) {
+
 }
 
 
+let inner = false;
 
-
-
-let  inner=false;
 export function getInner() {
-   return inner;
+    return inner;
 }
+
 export function setInner(boo) {
-    inner=boo
+    inner = boo
 }

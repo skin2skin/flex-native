@@ -1,7 +1,7 @@
 /**
  * 解析css
  */
-import { getDataSet, getWeights, ipToInt } from "./utils";
+import {getDataSet, getWeights, ipToInt, setInner} from "./utils";
 let styleList=[];
 let cacheStyles=[];
 export default function parseCss(document) {
@@ -15,7 +15,6 @@ export default function parseCss(document) {
             item.cssText.split('}').filter(item => item.trim() !== '').forEach(item => {
                 const _item = item + '}';
                 const selectorText = _item.match(/([^{]*){([^}]*)}/)[1].trim();
-                console.log(selectorText)
                 const weights = getWeights(selectorText);
                 all.push({
                     cssText: _item.trim(),
@@ -152,6 +151,7 @@ export function setCssSelector(css = [], document) {
                     selectors.push(selector)
                 }
                 element.setAttribute('data-class', JSON.stringify(selectors));
+                setInner(true)
             }
         })
     })
