@@ -22,10 +22,14 @@ observerDocument(document,update);
 function main() {
     const time = new Date().getTime();
     parseCss(document).then((css) => {
+        //console.log('time',new Date().getTime()-time)
         setCssSelector(css, document);
-        const flexBox = [readAll(document, css)];
+
+        const flexBox = [readAll(document.body, css)];
+        console.log('time',new Date().getTime()-time)
         //开始设置位置
         render(flexBox);
+
         document.body.style.opacity = 1;
     })
 }

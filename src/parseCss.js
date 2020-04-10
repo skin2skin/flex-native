@@ -1,19 +1,19 @@
 /**
  * 解析css
  */
-import {getDataSet} from "./utils";
+import { getDataSet } from "./utils";
 
 export default function parseCss(document) {
-    return getAllStyle(document).then(res=>{
-        const all=[];
-        res.map(item=>{
-            item.cssText.split('}').filter(item=>item.trim()!=='').forEach(item=>{
-                const _item=item+'}';
-                const selectorText=_item.match(/([^{]*){([^}]*)}/)[1].trim();
+    return getAllStyle(document).then(res => {
+        const all = [];
+        res.map(item => {
+            item.cssText.split('}').filter(item => item.trim() !== '').forEach(item => {
+                const _item = item + '}';
+                const selectorText = _item.match(/([^{]*){([^}]*)}/)[1].trim();
                 all.push({
-                    cssText:_item.trim(),
-                    selector:selectorText,
-                    [selectorText]:getDetailRule({cssText:_item.trim(), selectorText})
+                    cssText: _item.trim(),
+                    selector: selectorText,
+                    [selectorText]: getDetailRule({ cssText: _item.trim(), selectorText })
                 })
             });
         });
@@ -26,14 +26,14 @@ export default function parseCss(document) {
  * @param url
  */
 function httpGet(url) {
-    return new Promise((resolve, reject)=>{
-        const http=new XMLHttpRequest();
-        http.open("GET",url,true);
+    return new Promise((resolve, reject) => {
+        const http = new XMLHttpRequest();
+        http.open("GET", url, true);
         http.send();
         //异步接受响应
-        http.onreadystatechange = (e)=>{
-            if(http.readyState === 4){
-                if(http.status === 200){
+        http.onreadystatechange = (e) => {
+            if (http.readyState === 4) {
+                if (http.status === 200) {
                     resolve(http.responseText)
                 }
                 reject(e)
@@ -48,83 +48,105 @@ function httpGet(url) {
  *
  * @param document
  */
-function  getAllStyle(document) {
-    const res=[];
-    let task=[];
-    Array.from(document.querySelectorAll('link,style')).forEach((ele,index)=>{
-        if(ele.nodeName==='LINK'){
-            task.push(new Promise((resolve)=>{
-                httpGet(ele.href).then(result=>{
-                    const comment=result.match(/(\/\*)\/?(([^\*]\/)|[^\/])*(\*\/)/g);
-                    comment && comment.forEach(item => {
-                        result = result.replace(item, '')
-                    });
-                    res[index]={
-                        cssText:result
-                    };
-                    resolve()
-                })
-            }))
-        }else{
-            if(ele.outerText.includes('@import url')){
+function getAllStyle(document) {
+    const res = [];
+    let task = [];
+    Array.from(document.querySelectorAll('link,style')).forEach((ele, index) => {
+        if (ele.nodeName === 'LINK') {
+            console.log(ele.rel)
+            if (ele.rel && ele.rel.includes('stylesheet')) {
+                task.push(new Promise((resolve) => {
+                    httpGet(ele.href).then(result => {
+                        const comment = result.match(/(\/\*)\/?(([^\*]\/)|[^\/])*(\*\/)/g);
+                        comment && comment.forEach(item => {
+                            result = result.replace(item, '')
+                        });
+                        res[index] = {
+                            cssText: result
+                        };
+                        resolve()
+                    })
+                }))
+            }
+
+
+        } else {
+            if (ele.outerText && ele.outerText.includes('@import url')) {
                 console.warn('不支持@import url导入方式')
             }
-            let result=ele.outerText||'';
-            const comment=result.match(/(\/\*)\/?(([^\*]\/)|[^\/])*(\*\/)/g);
+            let result = ele.outerText || '';
+            const comment = result.match(/(\/\*)\/?(([^\*]\/)|[^\/])*(\*\/)/g);
             comment && comment.forEach(item => {
                 result = result.replace(item, '')
             });
-            res[index]={
-                cssText:result
+            res[index] = {
+                cssText: result
             };
         }
     });
-   return Promise.all(task).then(()=>Promise.resolve(res));
+    return Promise.all(task).then(() => Promise.resolve(res));
 }
 
 function getDetailRule(rule) {
-    const {cssText,selectorText} = rule;
+    let { cssText, selectorText } = rule;
     const res = {};
     if (selectorText) {
-        let reg;
-        if(/[\*\.\[\+]+/.test(selectorText)){
-            reg=new RegExp(`^\\${selectorText}[^{]*{([^}]*)}`)
-        }else{
-            reg=new RegExp(`^${selectorText}[^{]*{([^}]*)}`)
+        cssText = cssText.trim();
+        if (cssText.startsWith('@')) {
+            return {}
         }
-        const text = cssText.match(reg)[1];
+        let reg;
+        reg = new RegExp(`[^{]*{([^}]*)}`)
+        /*  if(/[\*\.\[\+]+/.test(selectorText)){
+              reg=new RegExp(`[^{]*{([^}]*)}`)
+          }else{
+              reg=new RegExp(`[^{]*{([^}]*)}`)
+          }*/
+        const match = cssText.match(reg);
+        const text = match[1];
         text.split(';').filter(item => item.trim() !== '').map(item => {
-            const arr = item.split(':');
-            res[arr[0].trim()] = arr[1].trim()
+            const i = item.indexOf(':');
+            let key = item.slice(0, i)
+            let value = item.slice(i + 1) || '';
+            res[key] = value.trim()
+
         });
     }
 
 
     return res;
 }
-const ignoreTags=['html','style','head','meta','title','script','link']
+
+const ignoreTags = ['html', 'style', 'head', 'meta', 'title', 'script', 'link']
+
 /**
  *
  */
-export function setCssSelector(css =[], document) {
-    const ownerDocument=document.ownerDocument?document.ownerDocument:document
+export function setCssSelector(css = [], document) {
+    const ownerDocument = document.ownerDocument ? document.ownerDocument : document
     css.forEach(item => {
-        const {selector}=item;
-        if(selector.includes('@')){
+        const { selector } = item;
+        if (selector.includes('@')||selector.includes('::')) {
             return
         }
-        const elements=ownerDocument.querySelectorAll(selector)||[];
-        Array.from(elements).map(element=>{
-            if(!ignoreTags.includes(element.localName)){
-                const classListJson=getDataSet(element,'class');
-                let selectors=[];
-                if(classListJson){
+        let elements ;
+        try {
+            elements = ownerDocument.querySelectorAll(selector) || [];
+        }catch (e) {
+            return;
+        }
+
+        Array.from(elements).map(element => {
+            if (!ignoreTags.includes(element.localName)) {
+                const classListJson = getDataSet(element, 'class');
+                let selectors = [];
+                if (classListJson) {
                     selectors.push(...JSON.parse(classListJson))
                 }
-                if(!selectors.includes(selector)){
+                if (!selectors.includes(selector)) {
                     selectors.push(selector)
                 }
-                element.setAttribute('data-class',JSON.stringify(selectors));
+                element.setAttribute('data-class', JSON.stringify(selectors));
             }
         })
     })
