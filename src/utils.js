@@ -222,14 +222,7 @@ export function getComputedStyleByCss(element, css) {
         return {}
     }
     const selectors = JSON.parse(dataSetText);
-    css = css.map(item => {
-        const weights = getWeights(item.selector);
-        item.weights = {
-            arr: weights,
-            int: ipToInt(weights)
-        };
-        return item
-    });
+
     let res = {};
     const importantSelector = (obj, selector) => {
         Object.keys(obj).map(key => {
@@ -245,8 +238,8 @@ export function getComputedStyleByCss(element, css) {
         return obj
     };
 
-    const _css = [...css].sort((a, b) => a.weights.int - b.weights.int);
-    _css.forEach(item => {
+
+    css.forEach(item => {
         if (selectors.includes(item.selector)) {
             importantSelector(item[item.selector], item.selector)
         }
@@ -263,11 +256,11 @@ export function getComputedStyleByCss(element, css) {
  * 获取权重
  *  * 权重信息参考地址 https://www.cnblogs.com/wangmeijian/p/4207433.html
  */
-function getWeights(selector) {
+export function getWeights(selector) {
     const arr = selector.split('');
     let stack = [];
     let weights = [0, 0, 0, 0];
-    arr.map((item, index) => {
+    arr.forEach((item, index) => {
         stack.push(item);
         if (index !== 0 && '. [#>+~:'.includes(item) || index === arr.length - 1) {
             let pop = '';
@@ -276,13 +269,13 @@ function getWeights(selector) {
             }
             const itemSelector = stack.join('').trim();
             //id
-            if (itemSelector.startsWith('#')) {
+            if (itemSelector[0]==='#') {
                 weights[1] = weights[1] + 1;
                 //类选择器、属性选择器或伪类
-            } else if (itemSelector.startsWith('.') || itemSelector.startsWith(':') || itemSelector.startsWith('[')) {
+            } else if (itemSelector[0]==='.' || itemSelector[0]===':' || itemSelector[0]==='[') {
                 weights[2] = weights[2] + 1;
                 //通配选择器
-            } else if (itemSelector.startsWith('>') || itemSelector.startsWith('~') || itemSelector.startsWith('+') || itemSelector.startsWith('*')) {
+            } else if (itemSelector[0]==='>' || itemSelector[0]==='~' || itemSelector[0]==='+' || itemSelector[0]==='*') {
                 //元素和伪元素
             } else {
                 weights[3] = weights[3] + 1;
@@ -291,6 +284,7 @@ function getWeights(selector) {
             stack.push(pop)
         }
     });
+
     return weights
 
 }
@@ -300,7 +294,7 @@ function getWeights(selector) {
  * @param ip
  * @returns {number}
  */
-function ipToInt(ip = [0, 0, 0, 0]) {
+export function ipToInt(ip = [0, 0, 0, 0]) {
     return ip[3] + ip[2] * 256 + ip[1] * 256 * 256 + ip[0] * 256 * 256 * 256
 }
 

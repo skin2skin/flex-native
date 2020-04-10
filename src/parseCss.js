@@ -1,22 +1,33 @@
 /**
  * 解析css
  */
-import { getDataSet } from "./utils";
-
+import { getDataSet, getWeights, ipToInt } from "./utils";
+let styleList=[];
+let cacheStyles=[];
 export default function parseCss(document) {
     return getAllStyle(document).then(res => {
+        if(styleList.length===res.length){
+            return Promise.resolve(cacheStyles)
+        }
+        styleList=res;
         const all = [];
-        res.map(item => {
+        res.forEach(item => {
             item.cssText.split('}').filter(item => item.trim() !== '').forEach(item => {
                 const _item = item + '}';
                 const selectorText = _item.match(/([^{]*){([^}]*)}/)[1].trim();
+                const weights = getWeights(selectorText);
                 all.push({
                     cssText: _item.trim(),
                     selector: selectorText,
+                    weights :{
+                        arr: weights,
+                        int: ipToInt(weights)
+                    },
                     [selectorText]: getDetailRule({ cssText: _item.trim(), selectorText })
                 })
             });
         });
+        cacheStyles=all;
         return Promise.resolve(all)
     });
 }
@@ -51,9 +62,10 @@ function httpGet(url) {
 function getAllStyle(document) {
     const res = [];
     let task = [];
-    Array.from(document.querySelectorAll('link,style')).forEach((ele, index) => {
+    let styles= Array.from(document.querySelectorAll('link,style'));
+
+    styles.forEach((ele, index) => {
         if (ele.nodeName === 'LINK') {
-            console.log(ele.rel)
             if (ele.rel && ele.rel.includes('stylesheet')) {
                 task.push(new Promise((resolve) => {
                     httpGet(ele.href).then(result => {
@@ -62,14 +74,12 @@ function getAllStyle(document) {
                             result = result.replace(item, '')
                         });
                         res[index] = {
-                            cssText: result
+                            cssText: result,
                         };
                         resolve()
                     })
                 }))
             }
-
-
         } else {
             if (ele.outerText && ele.outerText.includes('@import url')) {
                 console.warn('不支持@import url导入方式')
@@ -80,7 +90,7 @@ function getAllStyle(document) {
                 result = result.replace(item, '')
             });
             res[index] = {
-                cssText: result
+                cssText: result,
             };
         }
     });
@@ -92,24 +102,18 @@ function getDetailRule(rule) {
     const res = {};
     if (selectorText) {
         cssText = cssText.trim();
-        if (cssText.startsWith('@')) {
+        if (cssText[0]==='@') {
             return {}
         }
         let reg;
-        reg = new RegExp(`[^{]*{([^}]*)}`)
-        /*  if(/[\*\.\[\+]+/.test(selectorText)){
-              reg=new RegExp(`[^{]*{([^}]*)}`)
-          }else{
-              reg=new RegExp(`[^{]*{([^}]*)}`)
-          }*/
+        reg = new RegExp(`[^{]*{([^}]*)}`);
         const match = cssText.match(reg);
         const text = match[1];
-        text.split(';').filter(item => item.trim() !== '').map(item => {
+        text.split(';').filter(item => item.trim() !== '').forEach(item => {
             const i = item.indexOf(':');
             let key = item.slice(0, i)
             let value = item.slice(i + 1) || '';
             res[key] = value.trim()
-
         });
     }
 

@@ -1,5 +1,5 @@
 
-import {debounce, getInner, observerDocument, setInner} from './utils'
+import { debounce, getInner,observerDocument, setInner } from './utils'
 import readAll from "./readAll";
 import parseCss, {setCssSelector} from "./parseCss";
 import Flex from "./flex";
@@ -20,13 +20,10 @@ fn();
 observerDocument(document,update);
 
 function main() {
-    const time = new Date().getTime();
     parseCss(document).then((css) => {
-        //console.log('time',new Date().getTime()-time)
-        setCssSelector(css, document);
-
-        const flexBox = [readAll(document.body, css)];
-        console.log('time',new Date().getTime()-time)
+        const _css = [...css].sort((a, b) => a.weights.int - b.weights.int);
+        setCssSelector(_css, document);
+        const flexBox = [readAll(document.body, _css)];
         //开始设置位置
         render(flexBox);
 
