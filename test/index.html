@@ -36,12 +36,15 @@
         }
 
         .box {
+            display: inline-block;
+            margin: 20px;
             width: 200px;
             height: 100px;
             color: blue!important;
         }
 
         .box2 {
+            display: inline-block;
             width: 100px;
             height: 40px;
         }
@@ -54,7 +57,7 @@
         .etty {
             -js-display: flex;
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: center;
             justify-content: center;
         }
@@ -90,7 +93,13 @@
             border: 1px solid #cccccc;
         }
         button{
-            width: 400px;
+            width: 200px;
+        }
+        body{
+            margin: 0;
+        }
+        .ii{
+            margin-top: 300px
         }
     </style>
 
@@ -98,21 +107,34 @@
 
 <body>
 <div >
-    <div class="wrapper etty" >
+    <div class="wrapper etty ii" >
        <button>122222222222</button>
         <button>1</button>
         <textarea>234</textarea>
-        <div class="bo">
+        <!--<div class="bo">
             <div></div>
             <div></div>
             <div></div>
             <div></div>
-        </div>
+        </div>-->
     </div>
-   <!-- <div class="wrapper etty">
+    <div class="wrapper etty">
         <div class="box" style="flex-shrink:2;">1</div>
         <div class="box2" style="flex-shrink:2;">2</div>
         <div class="box2" style="flex-shrink:6;">2</div>
+        <div class="box2" style="flex-shrink:6;">2</div>
+        <div class="box2" style="flex-shrink:6;">2</div>
+        <div class="box2" style="flex-shrink:6;">2</div>
+        <div class="box2" style="flex-shrink:6;">2</div>
+        <div class="box2" style="flex-shrink:6;">2</div>
+        <div class="box2" style="flex-shrink:6;">2</div>
+        <!--<div class="box2" style="flex-shrink:6;">2</div>
+        <div class="box2" style="flex-shrink:6;">2</div>
+        <div class="box2" style="flex-shrink:6;">2</div>
+        <div class="box2" style="flex-shrink:6;">2</div>
+        <div class="box2" style="flex-shrink:6;">2</div>
+        <div class="box2" style="flex-shrink:6;">2</div>-->
+
     </div>
     <div class="wrapper etty">
         <div class="box" style="flex-shrink:2;">1</div>
@@ -128,7 +150,7 @@
         <div class="box" v-bind:style="styleObject">菜鸟教程</div>
         <div class="box2" style="flex-shrink:2;">2</div>
         <div class="box2" style="flex-shrink:6;">2</div>
-    </div>-->
+    </div>
 </div>
 <script>
     /*new Vue({
@@ -152,5 +174,5 @@
 </body>
 
 
-
+<!--<script src="https://unpkg.com/flex-native@1.0.4/dist/flex.native.min.js"></script>-->
 </html>

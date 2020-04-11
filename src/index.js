@@ -5,12 +5,12 @@ import Flex from "./flex";
 let isUpdateInner = true;
 const update = (e) => {
     if (!isUpdateInner) {
-        main();
+        //main();
     }
 };
 
 const updateGoogle = debounce(() => {
-    main();
+    //main();
 }, 50);
 
 //设置监听dom变化
@@ -57,6 +57,7 @@ function main() {
     observer && observer.disconnect();
     //let time = new Date().getTime();
     const flexBox = [readAll(document)];
+    //console.log(flexBox)
     //开始设置位置
     render(flexBox);
     document.body.style.opacity = 1;

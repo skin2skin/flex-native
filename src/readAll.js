@@ -93,7 +93,7 @@ function judgeIsNativeInline(element) {
  * 查询所有flexbox
  */
 export default function readAll(element) {
-    element instanceof Element&&resetStyle(element);
+
     // whether the element has a display flex style
     let isDisplayFlex = isFlexBox(element);
     let _ele = {
@@ -111,7 +111,7 @@ export default function readAll(element) {
     let childNode;
 
     if (isDisplayFlex) {
-
+        element instanceof Element&&resetStyle(element);
         let alignSelf = 'stretch';
         if (isFlexBox(element.parentNode)) {
             const _props = getStyle(element.parentNode);
@@ -151,22 +151,26 @@ export default function readAll(element) {
         if (isElement) {
             // push the child details to children
             let childDetails = readAll(childNode);
-            //如果父类为flex且自己不是flex的时候
-            if(isDisplayFlex&&!isFlexBox(childNode)){
-                const _style=getStyle(childNode);
-                childDetails.computedStyle=_style;
-                childDetails.style=childNode.getAttribute('style')||'';
-                childDetails.isNativeInline=judgeIsNativeInline(childNode);
-                childDetails.classList=getClassList(childNode);
-                childDetails.offsetLeft+=getTransform(childNode).x;
-                childDetails.offsetTop+=getTransform(childNode).y;
-                childDetails.props={
-                    alignSelf: getDefaultStyle(_style,'align-self')||_ele.props.alignItems,
-                    order: getDefaultStyle(_style,'order','order') || getDefaultProp('order'),
-                    flexShrink: getDefaultStyle(_style,'flex-shrink','flexShrink')|| getDefaultProp('flexShrink', _style) || getDefaultProp('flexShrink'),
-                    flexGrow:getDefaultStyle(_style,'flex-grow','flexGrow') || getDefaultProp('flexGrow', _style) || getDefaultProp('flexGrow')
+            if(isDisplayFlex){
+                element instanceof Element&&resetStyle(element);
+                //如果父类为flex且自己不是flex的时候
+                if(!isFlexBox(childNode)){
+                    const _style=getStyle(childNode);
+                    childDetails.computedStyle=_style;
+                    childDetails.style=childNode.getAttribute('style')||'';
+                    childDetails.isNativeInline=judgeIsNativeInline(childNode);
+                    childDetails.classList=getClassList(childNode);
+                    childDetails.offsetLeft+=getTransform(childNode).x;
+                    childDetails.offsetTop+=getTransform(childNode).y;
+                    childDetails.props={
+                        alignSelf: getDefaultStyle(_style,'align-self')||_ele.props.alignItems,
+                        order: getDefaultStyle(_style,'order','order') || getDefaultProp('order'),
+                        flexShrink: getDefaultStyle(_style,'flex-shrink','flexShrink')|| getDefaultProp('flexShrink', _style) || getDefaultProp('flexShrink'),
+                        flexGrow:getDefaultStyle(_style,'flex-grow','flexGrow') || getDefaultProp('flexGrow', _style) || getDefaultProp('flexGrow')
+                    }
                 }
             }
+
             _ele.children.push(childDetails);
         }
     }

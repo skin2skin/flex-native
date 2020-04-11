@@ -133,17 +133,18 @@ class Flex {
     }
 
     initState() {
-        const { style, computedStyle, left, top, element, children} = this;
+        const { style, computedStyle, left, top, element, children,W} = this;
         const {flexDirection} = this.props;
         let _children = children.sort((a, b) => {
             const aOrder = a.props.order;
             const bOrder = b.props.order;
             return Number(aOrder) - Number(bOrder);
         });
-        const remakePos = _children.map(item => {
+        const remakePos = _children.map((item,index) => {
             const obj = item.element.getBoundingClientRect();
             const nativeStyle=item.style;
             const style = item.computedStyle;
+            //console.log(style.width,obj.width)
 
             //排除掉fixed等影响布局的
             const isFixed = (style.position === 'absolute' || style.position === 'fixed');
@@ -161,8 +162,15 @@ class Flex {
                     y: 0,
                 }
             }
-            let width = obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight);
-            let height = obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom);
+            let width =obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight) ;
+            let height =obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom);
+            console.log('offsetLeft',item.offsetLeft)
+            console.log('offsetTop',item.offsetTop)
+            let _x=0;
+            let _y=0;
+                _x= - (item.offsetLeft - parseInt(style.marginLeft) - parseInt(computedStyle.borderLeftWidth)-parseInt(computedStyle.paddingLeft) - left);
+                _y= - (item.offsetTop - parseInt(style.marginTop) - parseInt(computedStyle.borderLeftWidth) -parseInt(computedStyle.paddingTop)- top);
+
             return {
                 element: item.element,
                 computedStyle:item.computedStyle,
@@ -178,8 +186,8 @@ class Flex {
                 paddingRight: parseInt(style.paddingRight),
                 height,
                 width,
-                x: -(item.offsetLeft - parseInt(style.marginLeft) - parseInt(computedStyle.borderLeftWidth)-parseInt(computedStyle.paddingLeft) - left),
-                y: -(item.offsetTop - parseInt(style.marginTop) - parseInt(computedStyle.borderLeftWidth) -parseInt(computedStyle.paddingTop)- top),
+                x: _x,
+                y: _y,
             }
         }).filter((item) => !item.isFixed);
         //创建流动布局
@@ -192,9 +200,9 @@ class Flex {
                 return al + b.max
             }
         }, 0);
+        //console.log('flowbox',flowBox)
         //开始布局
         const array = this.startLayout(flowBox);
-        element.isinner=true;
         element.style['height'] = this.height.toFixed(6) + 'px';
         element.setAttribute('data-origin', style);
         element.setAttribute('data-style', element.getAttribute('style'));
@@ -204,9 +212,9 @@ class Flex {
             const {element} = item;
             element.style[getPrefixAndProp('transform')] = createTransform(item);
             const acWidth = item[this.W] + item.withOffset;
-            element.isinner=true;
-            element.style[this.W] = (acWidth < 0 ? 0.000000 : acWidth.toFixed(6)) + 'px';
-
+                //if(!it.isNativeInline){
+                    element.style[this.W] = (acWidth < 0 ? 0.000000 : acWidth.toFixed(6)) + 'px';
+                //}
             const itemPrams = this.children[index];
             if (itemPrams.isFlex) {
                 new Flex(this.children[index])
@@ -230,7 +238,7 @@ class Flex {
      *根据flexGrow和FlexShrink重新定义宽度或者高度
      */
     resetWidthByShrinkAndGrow(arr) {
-
+        console.log(this)
         const {flexDirection} = this.props;
         const {W, X} = this;
         return arr.map(array => {
@@ -246,7 +254,6 @@ class Flex {
                 item.withOffset2 = needAdd;
                 return item;
             });
-
             array = array.map((item, index) => {
                 item[W] = item[W] + item.withOffset2;
                 //由于Y轴本身就是流动的 会影响布局 所以给加上之前的withOffset2
@@ -302,12 +309,12 @@ class Flex {
             arr = arr.reverse()
         }
 
-
         return arr.map((item) => {
             const lineArrayWidth = item.reduce((al, item) => al + item[W], 0);
             return {
                 max: this.getStretchMax(item),
                 lineArray: item.map((_item, _index) => {
+
                     if (flexDirection.includes('reverse')) {
                         _item[X] += this[W] - item.filter((a, b) => b <= _index).reduce((a, b) => a + b[W], 0);
                     } else {
