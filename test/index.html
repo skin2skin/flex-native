@@ -11,7 +11,7 @@
             background: grey;
         }
         .wrapper {
-            width:80%;
+            width:600px;
             border: 5px solid #cccccc;
             margin: 10px;
             margin-left: 30px;
@@ -54,9 +54,7 @@
         .etty {
             -js-display: flex;
             display: flex;
-            flex-wrap: nowrap;
-            /* align-items: center*/
-            /* justify-content: center;  */
+            flex-wrap: wrap;
             align-items: center;
             justify-content: center;
         }
@@ -78,18 +76,40 @@
         .etty>div {
             width: 10%;
         }
+        .bo{
+            display: flex;
+           -js-display: flex;
+            width: 100px!important;
+            padding: 10px;
+            height: 200px;
+        }
+        .bo>div{
+            width: 100px;
+            height: 100px;
+            box-sizing: border-box;
+            border: 1px solid #cccccc;
+        }
+        button{
+            width: 400px;
+        }
     </style>
 
 </head>
 
 <body>
 <div >
-    <div class="wrapper etty" style="display: inline-flex !important;">
-        <div class="box" style="flex-shrink:2;order: 3">1</div>
-        <div class="box2" style="flex-shrink:2;order: 2">2</div>
-        <div class="box2" style="flex-shrink:6;order: 1">3</div>
+    <div class="wrapper etty" >
+       <button>122222222222</button>
+        <button>1</button>
+        <textarea>234</textarea>
+        <div class="bo">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
     </div>
-    <div class="wrapper etty">
+   <!-- <div class="wrapper etty">
         <div class="box" style="flex-shrink:2;">1</div>
         <div class="box2" style="flex-shrink:2;">2</div>
         <div class="box2" style="flex-shrink:6;">2</div>
@@ -108,10 +128,10 @@
         <div class="box" v-bind:style="styleObject">菜鸟教程</div>
         <div class="box2" style="flex-shrink:2;">2</div>
         <div class="box2" style="flex-shrink:6;">2</div>
-    </div>
+    </div>-->
 </div>
 <script>
-    new Vue({
+    /*new Vue({
         el: '#app',
         data: {
             styleObject: {
@@ -126,7 +146,7 @@
                 _this.styleObject.width='100px'
             },1000);
         }
-    })
+    })*/
 
 </script>
 </body>

@@ -1,31 +1,31 @@
-
-import {debounce, Observer} from './utils'
+import {debounce} from './utils'
 import readAll from "./readAll";
 import Flex from "./flex";
-document.body.style.opacity = 0;
-let isUpdateInner=true;
-const update=(e)=>{
-    if(!isUpdateInner){
-        //console.log('update',new Date().getTime())
+
+let isUpdateInner = true;
+const update = (e) => {
+    if (!isUpdateInner) {
         main();
     }
 };
 
-const updateGoogle=debounce(()=>{
+const updateGoogle = debounce(() => {
     main();
-},50);
+}, 50);
 
+//设置监听dom变化
 let MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
 let observer;
 const config = {attributes: true, childList: true, subtree: true};
-if(MutationObserver){
+if (MutationObserver) {
     observer = new MutationObserver(function (mutationsList, observer) {
         updateGoogle()
     });
     observer.observe(document, config);
-}else{
+} else {
     document.addEventListener('DOMSubtreeModified', update);
 }
+//监听窗口变化
 if (window.attachEvent) {
     window.attachEvent('onresize', updateGoogle);
 } else {
@@ -48,19 +48,23 @@ const render = (flexBox) => {
     })
 };
 
+/**
+ * 入口函数
+ */
 function main() {
-    isUpdateInner=true;
-    observer&&observer.disconnect();
-     let time=new Date().getTime();
+    document.body.style.opacity = 0;
+    isUpdateInner = true;
+    observer && observer.disconnect();
+    //let time = new Date().getTime();
     const flexBox = [readAll(document)];
     //开始设置位置
     render(flexBox);
     document.body.style.opacity = 1;
-    console.log('renderTime---',new Date().getTime()-time)
-    setTimeout(()=>{
-        isUpdateInner=false;
-        observer&&observer.observe(document,config);
-    },0)
+    setTimeout(() => {
+        isUpdateInner = false;
+        observer && observer.observe(document, config);
+    }, 0)
 
 }
+
 main();

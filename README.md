@@ -41,11 +41,13 @@ import('flex-native');
 - css
 	<br>
 	.wrapper{     
-		display:flex;
+		-js-display:flex;
+        display:flex;
 		align-items:center;
 		justify-content:center;
 		<br>
 		}
+Note that you need to write the custom attribute -js-display in CSS to be recognized by ie
 - inline
 	<br>
 	&lt;div style='display:flex;align-items:center&gt;

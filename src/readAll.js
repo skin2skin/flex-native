@@ -1,9 +1,9 @@
 import {
-    getClassList, getComputedStyleByCss, getDataSet, getDefaultProp, getDefaultStyle, getStyle,
-    getStyleFromCssText, setInner
+    getClassList, getDataSet, getDefaultProp, getDefaultStyle, getStyle,
+    getStyleFromCssText, getTransform,
 } from "./utils";
 
-let displayFlexMatch = /(^|;)\s*display\s*:\s*(inline-)?flex\s*(;|$)/i;
+let displayFlexMatch = /(^|;)\s*(-js-)?display\s*:\s*(inline-)?flex\s*(;|$)/i;
 let flexMatch = /^(inline-)?flex/i;
 
 /**
@@ -14,12 +14,12 @@ let flexMatch = /^(inline-)?flex/i;
  function isFlexBox(element) {
         // whether the element is an element
         let isElement = element instanceof Element;
-
         // whether the element has a data flex attribute
         let dataFlexStyle = isElement && element.getAttribute('style');
-
+            const a=displayFlexMatch.test(dataFlexStyle);
         // whether the element has a current style and -js-display declaration
         let currentStyleJsDisplay = isElement && (element.currentStyle && element.currentStyle['-js-display']||getComputedStyle(element,null)['display']);
+        const b=flexMatch.test(currentStyleJsDisplay)
         // whether flex is detected by the data flex attribute or the current style
         return displayFlexMatch.test(dataFlexStyle) || flexMatch.test(currentStyleJsDisplay);
     }
@@ -47,7 +47,6 @@ function dealInlineFlex(element){
             text = text.replace(getStyleFromCssText(text).display, 'inline-block')
         }
         element.setAttribute('style', text)
-        setInner(true)
 
     }
 }
@@ -76,13 +75,20 @@ function resetStyle(element){
                 _oriStyleText+=`${key}:${value};`
             });
             element.setAttribute('style',_oriStyleText)
-
         }
-        setInner(true)
 
+    }else{
+        element.setAttribute('style','')
     }
 }
 
+/**
+ * 判断是否是原始的inline-block元素
+ */
+function judgeIsNativeInline(element) {
+    const list=['input','img','button','select'];
+    return list.includes(element.localName)
+}
 /**
  * 查询所有flexbox
  */
@@ -94,6 +100,8 @@ export default function readAll(element) {
         element,
         classList:[],
         style:'',
+        offsetLeft:element.offsetLeft,
+        offsetTop:element.offsetTop,
         computedStyle: {},
         tag: element.localName,
         children: []
@@ -113,9 +121,12 @@ export default function readAll(element) {
         _ele = {
             element,
             isFlex:true,
+            isNativeInline:judgeIsNativeInline(element),
             tag: element.localName,
             classList: getClassList(element),
             style:element.getAttribute('style')||'',
+            offsetLeft:element.offsetLeft,
+            offsetTop:element.offsetTop,
             computedStyle:props,
             children: [],
             props: {
@@ -142,10 +153,13 @@ export default function readAll(element) {
             let childDetails = readAll(childNode);
             //如果父类为flex且自己不是flex的时候
             if(isDisplayFlex&&!isFlexBox(childNode)){
-                const _style=getStyle(childNode)
+                const _style=getStyle(childNode);
                 childDetails.computedStyle=_style;
                 childDetails.style=childNode.getAttribute('style')||'';
+                childDetails.isNativeInline=judgeIsNativeInline(childNode);
                 childDetails.classList=getClassList(childNode);
+                childDetails.offsetLeft+=getTransform(childNode).x;
+                childDetails.offsetTop+=getTransform(childNode).y;
                 childDetails.props={
                     alignSelf: getDefaultStyle(_style,'align-self')||_ele.props.alignItems,
                     order: getDefaultStyle(_style,'order','order') || getDefaultProp('order'),
@@ -158,6 +172,5 @@ export default function readAll(element) {
     }
 
     return _ele;
-    //return children
 }
 

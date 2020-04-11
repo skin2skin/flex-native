@@ -36,12 +36,13 @@ import('flex-native');
 - CSS中
 	<br>
 	.wrapper{     
+		-js-display:flex;
 		display:flex;
 		align-items:center;
 		justify-content:center;
 		<br>
 		}
-		
+		注意需要在css中写入-js-display这个自定义属性才能被ie识别
 - 元素上
 	<br>
 	&lt;div style='display:flex;align-items:center&gt;
