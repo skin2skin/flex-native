@@ -164,12 +164,8 @@ class Flex {
             }
             let width =obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight) ;
             let height =obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom);
-            console.log('offsetLeft',item.offsetLeft)
-            console.log('offsetTop',item.offsetTop)
-            let _x=0;
-            let _y=0;
-                _x= - (item.offsetLeft - parseInt(style.marginLeft) - parseInt(computedStyle.borderLeftWidth)-parseInt(computedStyle.paddingLeft) - left);
-                _y= - (item.offsetTop - parseInt(style.marginTop) - parseInt(computedStyle.borderLeftWidth) -parseInt(computedStyle.paddingTop)- top);
+            let _x= - (item.offsetLeft - parseInt(style.marginLeft) - parseInt(computedStyle.borderLeftWidth)-parseInt(computedStyle.paddingLeft) - left);
+            let _y= - (item.offsetTop - parseInt(style.marginTop) - parseInt(computedStyle.borderLeftWidth) -parseInt(computedStyle.paddingTop)- top);
 
             return {
                 element: item.element,
@@ -211,10 +207,6 @@ class Flex {
             const item = Flex.findByIndex(array, index);
             const {element} = item;
             element.style[getPrefixAndProp('transform')] = createTransform(item);
-            const acWidth = item[this.W] + item.withOffset;
-                //if(!it.isNativeInline){
-                    element.style[this.W] = (acWidth < 0 ? 0.000000 : acWidth.toFixed(6)) + 'px';
-                //}
             const itemPrams = this.children[index];
             if (itemPrams.isFlex) {
                 new Flex(this.children[index])
@@ -238,9 +230,7 @@ class Flex {
      *根据flexGrow和FlexShrink重新定义宽度或者高度
      */
     resetWidthByShrinkAndGrow(arr) {
-        console.log(this)
-        const {flexDirection} = this.props;
-        const {W, X} = this;
+        const {W} = this;
         return arr.map(array => {
             const lineArrayWidth = array.reduce((al, item) => al + item[W], 0);
             const restWidth = this[W] - lineArrayWidth;
@@ -250,21 +240,21 @@ class Flex {
             array = array.map(item => {
                 let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth, allRateGrow, allFlexShrink);
                 const offset= -item.borderLeftWidth - item.borderRightWidth - item.marginLeft - item.marginRight - item.paddingLeft - item.paddingRight;
-                item.withOffset =(item.isNativeInline)?0:offset
+                item.withOffset =(item.isNativeInline)?- item.marginLeft - item.marginRight:offset;
                 item.withOffset2 = needAdd;
                 return item;
             });
-            array = array.map((item, index) => {
+            const {computedStyle} = this;
+            array = array.map((item) => {
                 item[W] = item[W] + item.withOffset2;
-                //由于Y轴本身就是流动的 会影响布局 所以给加上之前的withOffset2
-                if (flexDirection.includes('column')) {
-                    if (index !== 0) {
-                        const pre = array.filter((it, ind) => ind < index).reduce((al, b) => {
-                            return al + b.withOffset2
-                        }, 0);
-                        item[X] = item[X] - pre;
-                    }
-                }
+                const acWidth = item[this.W] + item.withOffset;
+                item.element.style[this.W] = (acWidth < 0 ? 0.000000 : acWidth.toFixed(6)) + 'px';
+                return item;
+            });
+            //为什么不放在上面是因为 上面那个遍历在设置宽度 如果在本身就支持flex的浏览器中 会导致 设置的item的后面会宽度会自动变化
+            array=array.map((item) => {
+                item.x= - (item.element.offsetLeft - parseInt(item.computedStyle.marginLeft) - parseInt(computedStyle.borderLeftWidth)-parseInt(computedStyle.paddingLeft) - item.element.parentNode.offsetLeft);
+                item.y= - (item.element.offsetTop - parseInt(item.computedStyle.marginTop) - parseInt(computedStyle.borderTopWidth) -parseInt(computedStyle.paddingTop)- item.element.parentNode.offsetTop);
                 return item;
             });
             return array;
