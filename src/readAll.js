@@ -1,5 +1,5 @@
 import {
-    getClassList, getDataSet, getDefaultProp, getDefaultStyle, getStyle,
+    getClassList, getDataSet, getDefaultProp, getDefaultStyle, getOffset, getStyle,
     getStyleFromCssText, getTransform,
 } from "./utils";
 
@@ -100,8 +100,8 @@ export default function readAll(element) {
         element,
         classList:[],
         style:'',
-        offsetLeft:element.offsetLeft,
-        offsetTop:element.offsetTop,
+        offsetLeft:0,
+        offsetTop:0,
         computedStyle: {},
         tag: element.localName,
         children: []
@@ -125,8 +125,8 @@ export default function readAll(element) {
             tag: element.localName,
             classList: getClassList(element),
             style:element.getAttribute('style')||'',
-            offsetLeft:element.offsetLeft,
-            offsetTop:element.offsetTop,
+            offsetLeft:getOffset(element).left,
+            offsetTop:getOffset(element).top,
             computedStyle:props,
             children: [],
             props: {
@@ -160,8 +160,8 @@ export default function readAll(element) {
                     childDetails.style=childNode.getAttribute('style')||'';
                     childDetails.isNativeInline=judgeIsNativeInline(childNode);
                     childDetails.classList=getClassList(childNode);
-                    childDetails.offsetLeft+=getTransform(childNode).x;
-                    childDetails.offsetTop+=getTransform(childNode).y;
+                    childDetails.offsetLeft=getOffset(childNode).left;
+                    childDetails.offsetTop=getOffset(childNode).top;
                     childDetails.props={
                         alignSelf: getDefaultStyle(_style,'align-self')||_ele.props.alignItems,
                         order: getDefaultStyle(_style,'order','order') || getDefaultProp('order'),
@@ -169,6 +169,9 @@ export default function readAll(element) {
                         flexGrow:getDefaultStyle(_style,'flex-grow','flexGrow') || getDefaultProp('flexGrow', _style) || getDefaultProp('flexGrow')
                     }
                 }
+            }else{
+                childDetails.offsetLeft=getOffset(childNode).left;
+                childDetails.offsetTop=getOffset(childNode).top;
             }
 
             _ele.children.push(childDetails);

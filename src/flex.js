@@ -1,6 +1,6 @@
 //内联元素
 import {
-    createTransform, getPrefixAndProp
+    createTransform, getOffset, getPrefixAndProp, getTransform
 } from "./utils";
 
 const inlineArr = ['a',
@@ -253,8 +253,8 @@ class Flex {
             });
             //为什么不放在上面是因为 上面那个遍历在设置宽度 如果在本身就支持flex的浏览器中 会导致 设置的item的后面会宽度会自动变化
             array=array.map((item) => {
-                item.x= - (item.element.offsetLeft - parseInt(item.computedStyle.marginLeft) - parseInt(computedStyle.borderLeftWidth)-parseInt(computedStyle.paddingLeft) - item.element.parentNode.offsetLeft);
-                item.y= - (item.element.offsetTop - parseInt(item.computedStyle.marginTop) - parseInt(computedStyle.borderTopWidth) -parseInt(computedStyle.paddingTop)- item.element.parentNode.offsetTop);
+                item.x=- (getOffset(item.element).left  - parseInt(item.computedStyle.marginLeft) - parseInt(computedStyle.borderLeftWidth)-parseInt(computedStyle.paddingLeft) - getOffset(item.element.parentNode).left );
+                item.y=- (getOffset(item.element).top - parseInt(item.computedStyle.marginTop) - parseInt(computedStyle.borderTopWidth) -parseInt(computedStyle.paddingTop)- getOffset(item.element.parentNode).top);
                 return item;
             });
             return array;
