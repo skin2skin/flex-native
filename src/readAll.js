@@ -16,10 +16,8 @@ let flexMatch = /^(inline-)?flex/i;
         let isElement = element instanceof Element;
         // whether the element has a data flex attribute
         let dataFlexStyle = isElement && element.getAttribute('style');
-            const a=displayFlexMatch.test(dataFlexStyle);
         // whether the element has a current style and -js-display declaration
         let currentStyleJsDisplay = isElement && (element.currentStyle && element.currentStyle['-js-display']||getComputedStyle(element,null)['display']);
-        const b=flexMatch.test(currentStyleJsDisplay)
         // whether flex is detected by the data flex attribute or the current style
         return displayFlexMatch.test(dataFlexStyle) || flexMatch.test(currentStyleJsDisplay);
     }

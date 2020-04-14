@@ -162,9 +162,8 @@ class Flex {
                     y: 0,
                 }
             }
-            console.log(obj.width)
-            let width =obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight) +parseInt(style.borderLeftWidth)+parseInt(style.borderRightWidth) ;
-            let height =obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom) +parseInt(style.borderTopWidth)+parseInt(style.borderBottomWidth);
+            let width =obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight) + (item.isNativeInline?0:(parseInt(style.borderLeftWidth)+parseInt(style.borderRightWidth))) ;
+            let height =obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom) + (item.isNativeInline?0:(parseInt(style.borderTopWidth)+parseInt(style.borderBottomWidth)));
             let _x= - (item.offsetLeft - parseInt(style.marginLeft) - parseInt(computedStyle.borderLeftWidth)-parseInt(computedStyle.paddingLeft) - left);
             let _y= - (item.offsetTop - parseInt(style.marginTop) - parseInt(computedStyle.borderLeftWidth) -parseInt(computedStyle.paddingTop)- top);
 

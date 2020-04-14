@@ -9,7 +9,12 @@ const update = (e) => {
     }
 };
 
-const updateGoogle = debounce(() => {
+const updateGoogle = debounce((list) => {
+    const set= new Set(list.map(item=>item.target));
+
+    Array.from(set).forEach(node=>{
+        console.log(node)
+    });
     main();
 }, 50);
 
@@ -18,8 +23,8 @@ let MutationObserver = window.MutationObserver || window.WebKitMutationObserver 
 let observer;
 const config = {attributes: true, childList: true, subtree: true};
 if (MutationObserver) {
-    observer = new MutationObserver(function (mutationsList, observer) {
-        updateGoogle()
+    observer = new MutationObserver(function (mutationsList, ob) {
+        updateGoogle(mutationsList)
     });
     observer.observe(document, config);
 } else {
@@ -52,8 +57,8 @@ const render = (flexBox) => {
  * 入口函数
  */
 function main() {
-    console.log('render--')
-    document.body.style.opacity = 0;
+    //console.log('render--')
+    //document.body.style.opacity = 0;
     isUpdateInner = true;
     observer && observer.disconnect();
     //let time = new Date().getTime();
@@ -61,7 +66,7 @@ function main() {
     //console.log(flexBox)
     //开始设置位置
     render(flexBox);
-    document.body.style.opacity = 1;
+   // document.body.style.opacity = 1;
     setTimeout(() => {
         isUpdateInner = false;
         observer && observer.observe(document, config);
