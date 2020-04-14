@@ -162,8 +162,9 @@ class Flex {
                     y: 0,
                 }
             }
-            let width =obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight) ;
-            let height =obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom);
+            console.log(obj.width)
+            let width =obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight) +parseInt(style.borderLeftWidth)+parseInt(style.borderRightWidth) ;
+            let height =obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom) +parseInt(style.borderTopWidth)+parseInt(style.borderBottomWidth);
             let _x= - (item.offsetLeft - parseInt(style.marginLeft) - parseInt(computedStyle.borderLeftWidth)-parseInt(computedStyle.paddingLeft) - left);
             let _y= - (item.offsetTop - parseInt(style.marginTop) - parseInt(computedStyle.borderLeftWidth) -parseInt(computedStyle.paddingTop)- top);
 
@@ -240,6 +241,7 @@ class Flex {
             array = array.map(item => {
                 let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth, allRateGrow, allFlexShrink);
                 const offset= -item.borderLeftWidth - item.borderRightWidth - item.marginLeft - item.marginRight - item.paddingLeft - item.paddingRight;
+                //console.log('offset',offset)
                 item.withOffset =(item.isNativeInline)?- item.marginLeft - item.marginRight:offset;
                 item.withOffset2 = needAdd;
                 return item;
@@ -248,6 +250,7 @@ class Flex {
             array = array.map((item) => {
                 item[W] = item[W] + item.withOffset2;
                 const acWidth = item[this.W] + item.withOffset;
+                //console.log('acWidth---',acWidth)
                 item.element.style[this.W] = (acWidth < 0 ? 0.000000 : acWidth.toFixed(6)) + 'px';
                 return item;
             });
