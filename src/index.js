@@ -5,17 +5,17 @@ import Flex from "./flex";
 let isUpdateInner = true;
 const update = (e) => {
     if (!isUpdateInner) {
-        main();
+        main(e.target.parentNode);
     }
 };
 
 const updateGoogle = debounce((list) => {
-    const set= new Set(list.map(item=>item.target));
+    const set = new Set(list.map(item => item.target));
 
-    Array.from(set).forEach(node=>{
-        console.log(node)
+    Array.from(set).forEach(node => {
+        main(node.parentNode);
     });
-    main();
+   // main();
 }, 50);
 
 //设置监听dom变化
@@ -46,7 +46,7 @@ const render = (flexBox) => {
     flexBox.forEach(item => {
         //说明是flexBox
         if (item.isFlex) {
-            new Flex(item);
+            new Flex(item);//设置每个flexBox的位置
         } else {
             render(item.children)
         }
@@ -56,17 +56,23 @@ const render = (flexBox) => {
 /**
  * 入口函数
  */
-function main() {
-    //console.log('render--')
-    //document.body.style.opacity = 0;
+function main(ele = document) {
+    //console.log('render--');
+    if(ele===document){
+        document.body.style.opacity = 0;
+    }
+
     isUpdateInner = true;
     observer && observer.disconnect();
     //let time = new Date().getTime();
-    const flexBox = [readAll(document)];
+    const flexBox = [readAll(ele)];
     //console.log(flexBox)
     //开始设置位置
     render(flexBox);
-   // document.body.style.opacity = 1;
+    //console.log('time',new Date().getTime()-time);
+    if(ele===document){
+        document.body.style.opacity = 1;
+    }
     setTimeout(() => {
         isUpdateInner = false;
         observer && observer.observe(document, config);
