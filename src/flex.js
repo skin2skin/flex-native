@@ -200,6 +200,7 @@ class Flex {
         //开始布局
         const array = this.startLayout(flowBox);
         element.style['height'] = this.height.toFixed(6) + 'px';
+        element.style.opacity=1;
         element.setAttribute('data-origin', style);
         element.setAttribute('data-style', element.getAttribute('style'));
         this.flowLayoutBox = array;

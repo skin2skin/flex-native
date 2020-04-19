@@ -53,6 +53,7 @@ function dealInlineFlex(element){
  * 重置上一次的渲染
  */
 function resetStyle(element){
+    element.style.opacity=0;
     const oriStyleText=getDataSet(element,'origin');
     if(oriStyleText){
         const nowStyleText=element.getAttribute('style');
