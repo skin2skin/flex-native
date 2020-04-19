@@ -1,21 +1,36 @@
 import {debounce} from './utils'
-import readAll from "./readAll";
+import readAll, {isFlexBox} from "./readAll";
 import Flex from "./flex";
 
 let isUpdateInner = true;
 const update = (e) => {
     if (!isUpdateInner) {
-        main(e.target.parentNode);
+        main(getFlexRoot(e.target));
     }
 };
 
-const updateGoogle = debounce((list) => {
-    const set = new Set(list.map(item => item.target));
+/**
+ * 获取第一个是flex的父类
+ */
+function getFlexRoot(target){
+    if(isFlexBox(target.parentNode)){
+        return getFlexRoot(target.parentNode)
+    }else{
+        return target
+    }
+}
 
-    Array.from(set).forEach(node => {
-        main(node.parentNode);
-    });
-   // main();
+const updateGoogle = debounce((list) => {
+
+    if(Array.isArray(list)){
+        const set = new Set(list.map(item => item.target));
+
+        Array.from(set).forEach(node => {
+            main(getFlexRoot(node));
+        });
+    }else{
+        main();
+    }
 }, 50);
 
 //设置监听dom变化
@@ -58,8 +73,11 @@ const render = (flexBox) => {
  */
 function main(ele = document) {
     //console.log('render--');
+   // console.log(ele)
     if(ele===document){
         document.body.style.opacity = 0;
+    }else if(isFlexBox(ele)){
+        ele.style.opacity = 0;
     }
 
     isUpdateInner = true;
@@ -72,6 +90,8 @@ function main(ele = document) {
     //console.log('time',new Date().getTime()-time);
     if(ele===document){
         document.body.style.opacity = 1;
+    }else if(isFlexBox(ele)){
+        ele.style.opacity = 1;
     }
     setTimeout(() => {
         isUpdateInner = false;

@@ -11,7 +11,7 @@ let flexMatch = /^(inline-)?flex/i;
  * @param element
  * @returns {boolean}
  */
- function isFlexBox(element) {
+ export function isFlexBox(element) {
         // whether the element is an element
         let isElement = element instanceof Element;
         // whether the element has a data flex attribute
