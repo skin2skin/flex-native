@@ -11,11 +11,11 @@
             background: grey;
         }
         .wrapper {
-            width:600px;
+            width:800px;
             border: 5px solid #cccccc;
             margin: 10px;
             margin-left: 30px;
-            padding: 10px;
+            padding: 20px;
         }
 
         * {
@@ -24,7 +24,7 @@
 
         .wrapper div {
             color: red;
-            border: 1px solid #cccccc;
+            border: 10px solid #cccccc;
         }
 
         .wrapper-inner {
@@ -58,9 +58,10 @@
             -js-display: flex;
             display: flex;
             flex-direction: row;
-            flex-wrap: wrap;
-            align-items: center;
+            flex-wrap: nowrap;
+            align-items: flex-end;
             justify-content: center;
+            //align-content: center;
         }
         .etty2 {
             -js-display: flex;
@@ -78,12 +79,12 @@
             border: 1px solid #cccccc;
         }
         .etty>div {
-            width: 10%;
+           // width: 10%;
         }
         .bo{
             display: flex;
            -js-display: flex;
-            width: 100px!important;
+            width: 100px;
             padding: 10px;
             height: 200px;
         }
@@ -102,6 +103,10 @@
         }
         .ii{
             margin-top: 300px
+        }
+        *{
+        box-sizing: content-box;
+            //box-sizing: border-box;
         }
     </style>
 
@@ -166,9 +171,9 @@
         },
         mounted:function () {
             var _this=this;
-            setTimeout(function () {
+            /*setTimeout(function () {
                 _this.styleObject.width='100px'
-            },1000);
+            },1000);*/
         }
     })
 

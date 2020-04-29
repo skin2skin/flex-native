@@ -127,6 +127,7 @@ export default function readAll(element) {
             offsetLeft:getOffset(element).left,
             offsetTop:getOffset(element).top,
             computedStyle:props,
+            boxSizing:props.boxSizing,
             children: [],
             props: {
                 flexDirection:getDefaultStyle(props,'flex-direction','flexDirection')|| getDefaultProp('flexDirection', props) || getDefaultProp('flexDirection'),
@@ -161,16 +162,17 @@ export default function readAll(element) {
                     childDetails.classList=getClassList(childNode);
                     childDetails.offsetLeft=getOffset(childNode).left;
                     childDetails.offsetTop=getOffset(childNode).top;
+                    childDetails.boxSizing=_style.boxSizing,
                     childDetails.props={
                         alignSelf: getDefaultStyle(_style,'align-self')||_ele.props.alignItems,
                         order: getDefaultStyle(_style,'order','order') || getDefaultProp('order'),
                         flexShrink: getDefaultStyle(_style,'flex-shrink','flexShrink')|| getDefaultProp('flexShrink', _style) || getDefaultProp('flexShrink'),
                         flexGrow:getDefaultStyle(_style,'flex-grow','flexGrow') || getDefaultProp('flexGrow', _style) || getDefaultProp('flexGrow')
                     }
-                    //判断是否IE9，设置inline-block
-                    if (navigator.appName == "Microsoft Internet Explorer" && parseInt(navigator.appVersion.split(";")[1].replace(/[ ]/g, "").replace("MSIE", "")) <= 9) {
-                        childNode.style.display = 'inline-block';
-                    }
+                }
+                //判断是否IE9，设置inline-block
+                if (navigator.appName == "Microsoft Internet Explorer" && parseInt(navigator.appVersion.split(";")[1].replace(/[ ]/g, "").replace("MSIE", "")) <= 9) {
+                    childNode.style.display = 'inline-block';
                 }
             }else{
                 childDetails.offsetLeft=getOffset(childNode).left;

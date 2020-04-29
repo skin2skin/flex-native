@@ -5,7 +5,7 @@ import Flex from "./flex";
 let isUpdateInner = true;
 const update = (e) => {
     if (!isUpdateInner) {
-        main();
+        //main();
     }
 };
 const updateGoogle = debounce((list) => {
@@ -14,10 +14,10 @@ const updateGoogle = debounce((list) => {
         const set = new Set(list.map(item => item.target));
 
         Array.from(set).forEach(node => {
-            main();
+           // main();
         });
     }else{
-        main();
+        //main();
     }
 }, 50);
 

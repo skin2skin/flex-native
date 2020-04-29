@@ -89,19 +89,22 @@ class Flex {
         flexShrink: FLEX_SHRINK //属性定义了项目的缩小比例，默认为1，即如果空间不足，该项目将缩小
     };
 
-    init({element, props, classList, style, offsetLeft, offsetTop, computedStyle, children}) {
+    init({element, boxSizing, props, classList, style, offsetLeft, offsetTop, computedStyle, children}) {
         this.props = props;
         this.element = element;
         this.classList = classList;
         this.computedStyle = computedStyle;
         this.children = children;
+        this.boxSizing = boxSizing;
         const {flexDirection, flexWrap} = props;
         let wrapperRect = element.getBoundingClientRect();
+        const _innerWidth = - parseInt(computedStyle.paddingLeft) - parseInt(computedStyle.paddingRight) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.borderRightWidth);
+        const _innerHeight = - parseInt(computedStyle.paddingTop) - parseInt(computedStyle.paddingBottom) - parseInt(computedStyle.borderTopWidth) - parseInt(computedStyle.borderBottomWidth)
         wrapperRect = {
-            width: wrapperRect.width - parseInt(computedStyle.paddingLeft) - parseInt(computedStyle.paddingRight) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.borderRightWidth),
-            height: wrapperRect.height - parseInt(computedStyle.paddingTop) - parseInt(computedStyle.paddingBottom) - parseInt(computedStyle.borderTopWidth) - parseInt(computedStyle.borderBottomWidth)
+            width: wrapperRect.width + _innerWidth,
+            height: wrapperRect.height + _innerHeight
         };
-        this.left =offsetLeft;
+        this.left = offsetLeft;
         this.top = offsetTop;
         this.height = wrapperRect.height;
         this.width = wrapperRect.width;
@@ -133,16 +136,16 @@ class Flex {
     }
 
     initState() {
-        const { style, computedStyle, left, top, element, children,W} = this;
+        const {style, boxSizing, computedStyle, left, top, element, children, W} = this;
         const {flexDirection} = this.props;
         let _children = children.sort((a, b) => {
             const aOrder = a.props.order;
             const bOrder = b.props.order;
             return Number(aOrder) - Number(bOrder);
         });
-        const remakePos = _children.map((item,index) => {
+        const remakePos = _children.map((item, index) => {
             const obj = item.element.getBoundingClientRect();
-            const nativeStyle=item.style;
+            const nativeStyle = item.style;
             const style = item.computedStyle;
             //console.log(style.width,obj.width)
 
@@ -162,17 +165,17 @@ class Flex {
                     y: 0,
                 }
             }
-            let width =obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight) + (item.isNativeInline?0:(parseInt(style.borderLeftWidth)+parseInt(style.borderRightWidth))) ;
-            let height =obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom) + (item.isNativeInline?0:(parseInt(style.borderTopWidth)+parseInt(style.borderBottomWidth)));
-            let _x= - (item.offsetLeft - parseInt(style.marginLeft) - parseInt(computedStyle.borderLeftWidth)-parseInt(computedStyle.paddingLeft) - left);
-            let _y= - (item.offsetTop - parseInt(style.marginTop) - parseInt(computedStyle.borderLeftWidth) -parseInt(computedStyle.paddingTop)- top);
-
+            let width = obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight);
+            let height = obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom);
+            let _x = -(item.offsetLeft - parseInt(style.marginLeft) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.paddingLeft) - left);
+            let _y = -(item.offsetTop - parseInt(style.marginTop) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.paddingTop) - top);
             return {
                 element: item.element,
-                computedStyle:item.computedStyle,
-                style:nativeStyle,
-                isNativeInline:item.isNativeInline,
+                computedStyle: item.computedStyle,
+                style: nativeStyle,
+                isNativeInline: item.isNativeInline,
                 isFixed,
+                boxSizing: item.boxSizing,
                 props: item.props,
                 borderLeftWidth: parseInt(style.borderLeftWidth),
                 borderRightWidth: parseInt(style.borderRightWidth),
@@ -186,21 +189,21 @@ class Flex {
                 y: _y,
             }
         }).filter((item) => !item.isFixed);
+        console.log(JSON.parse(JSON.stringify(remakePos)))
         //创建流动布局
         const flowBox = this.createFlowBox(remakePos);
-
-        this.height = this.computedStyle.height ? this.height : flowBox.reduce((al, b) => {
+       /* const _height = boxSizing === 'border-box' ? parseInt(this.computedStyle.height) : this.height;
+        this.height = this.computedStyle.height ? _height : flowBox.reduce((al, b) => {
             if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
                 return al + b.lineArrayWidth
             } else {
                 return al + b.max
             }
-        }, 0);
-        //console.log('flowbox',flowBox)
+        }, 0);*/
         //开始布局
         const array = this.startLayout(flowBox);
-        element.style['height'] = this.height.toFixed(6) + 'px';
-        element.style.opacity=1;
+       // element.style['height'] = this.height.toFixed(6) + 'px';
+        element.style.opacity = 1;
         element.setAttribute('data-origin', style);
         element.setAttribute('data-style', element.getAttribute('style'));
         this.flowLayoutBox = array;
@@ -232,7 +235,7 @@ class Flex {
      */
     resetWidthByShrinkAndGrow(arr) {
         const {W} = this;
-        return arr.map(array => {
+        const _arr= arr.map(array => {
             const lineArrayWidth = array.reduce((al, item) => al + item[W], 0);
             const restWidth = this[W] - lineArrayWidth;
             let flexGrowArr = array.map(item => Number(item.props.flexGrow));
@@ -240,9 +243,9 @@ class Flex {
             const allFlexShrink = array.map(item => Number(item.props.flexShrink)).reduce((a, b) => a + b, 0);
             array = array.map(item => {
                 let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth, allRateGrow, allFlexShrink);
-                const offset= -item.borderLeftWidth - item.borderRightWidth - item.marginLeft - item.marginRight;
+                const offset = (item.boxSizing === 'border-box' ? 0 : (-item.borderLeftWidth - item.borderRightWidth)) - item.marginLeft - item.marginRight;
                 //console.log('offset',offset)
-                item.withOffset =(item.isNativeInline)?- item.marginLeft - item.marginRight:offset;
+                item.withOffset = offset;
                 item.withOffset2 = needAdd;
                 return item;
             });
@@ -255,13 +258,27 @@ class Flex {
                 return item;
             });
             //为什么不放在上面是因为 上面那个遍历在设置宽度 如果在本身就支持flex的浏览器中 会导致 设置的item的后面会宽度会自动变化
-            array=array.map((item) => {
-                item.x=- (getOffset(item.element).left  - parseInt(item.computedStyle.marginLeft) - parseInt(computedStyle.borderLeftWidth)-parseInt(computedStyle.paddingLeft) - getOffset(item.element.parentNode).left );
-                item.y=- (getOffset(item.element).top - parseInt(item.computedStyle.marginTop) - parseInt(computedStyle.borderTopWidth) -parseInt(computedStyle.paddingTop)- getOffset(item.element.parentNode).top);
+            array = array.map((item) => {
+                item.x = -(getOffset(item.element).left - parseInt(item.computedStyle.marginLeft) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.paddingLeft) - getOffset(item.element.parentNode).left);
+                item.y = -(getOffset(item.element).top - parseInt(item.computedStyle.marginTop) - parseInt(computedStyle.borderTopWidth) - parseInt(computedStyle.paddingTop) - getOffset(item.element.parentNode).top);
                 return item;
             });
             return array;
-        })
+        });
+
+        //重新设置高度
+        {
+            let wrapperRect = this.element.getBoundingClientRect();
+            const _innerWidth = - parseInt(this.computedStyle.paddingLeft) - parseInt(this.computedStyle.paddingRight) - parseInt(this.computedStyle.borderLeftWidth) - parseInt(this.computedStyle.borderRightWidth);
+            const _innerHeight = - parseInt(this.computedStyle.paddingTop) - parseInt(this.computedStyle.paddingBottom) - parseInt(this.computedStyle.borderTopWidth) - parseInt(this.computedStyle.borderBottomWidth)
+            wrapperRect = {
+                width: wrapperRect.width + _innerWidth,
+                height: wrapperRect.height + _innerHeight
+            };
+            this.height = wrapperRect.height;
+        }
+        return _arr;
+
     }
 
     /**
@@ -421,6 +438,7 @@ class Flex {
                     const restHeight = this[H] - allHeight;
                     const marginTop = restHeight / arr.length;
                     item.axisHeight = item.max + marginTop;
+                    console.log('axisHeight', this[H])
                     //得到前面的总的行高度
                     const marginZero = marginTop * index;
                     item.lineArray = item.lineArray.map(rect => ({
@@ -599,6 +617,7 @@ class Flex {
                 break;
             case ALIGN_ITEMS.CENTER:
                 item.lineArray = item.lineArray.map((rect) => {
+                    console.log(rect,item.axisHeight)
                     const props = rect.props || {};
                     if (props['alignSelf'] === ALIGN_ITEMS[FLEX_START]) {
                     } else if (props['alignSelf'] === ALIGN_ITEMS[FLEX_END]) {
