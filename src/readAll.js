@@ -167,6 +167,10 @@ export default function readAll(element) {
                         flexShrink: getDefaultStyle(_style,'flex-shrink','flexShrink')|| getDefaultProp('flexShrink', _style) || getDefaultProp('flexShrink'),
                         flexGrow:getDefaultStyle(_style,'flex-grow','flexGrow') || getDefaultProp('flexGrow', _style) || getDefaultProp('flexGrow')
                     }
+                    //判断是否IE9，设置inline-block
+                    if (navigator.appName == "Microsoft Internet Explorer" && parseInt(navigator.appVersion.split(";")[1].replace(/[ ]/g, "").replace("MSIE", "")) <= 9) {
+                        childNode.style.display = 'inline-block';
+                    }
                 }
             }else{
                 childDetails.offsetLeft=getOffset(childNode).left;

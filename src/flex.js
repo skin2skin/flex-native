@@ -240,7 +240,7 @@ class Flex {
             const allFlexShrink = array.map(item => Number(item.props.flexShrink)).reduce((a, b) => a + b, 0);
             array = array.map(item => {
                 let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth, allRateGrow, allFlexShrink);
-                const offset= -item.borderLeftWidth - item.borderRightWidth - item.marginLeft - item.marginRight - item.paddingLeft - item.paddingRight;
+                const offset= -item.borderLeftWidth - item.borderRightWidth - item.marginLeft - item.marginRight;
                 //console.log('offset',offset)
                 item.withOffset =(item.isNativeInline)?- item.marginLeft - item.marginRight:offset;
                 item.withOffset2 = needAdd;
