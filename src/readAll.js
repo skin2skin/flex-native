@@ -85,7 +85,7 @@ function resetStyle(element){
  * 判断是否是原始的inline-block元素
  */
 function judgeIsNativeInline(element) {
-    const list=['input','img','button','select'];
+    const list=['input','textarea','img','button','select'];
     return list.includes(element.localName)
 }
 /**
@@ -107,6 +107,8 @@ export default function readAll(element) {
     };
     // children of the element
     let index = -1;
+    let _index=-1;
+    let _childNode;
     let childNode;
 
     if (isDisplayFlex) {
@@ -127,7 +129,7 @@ export default function readAll(element) {
             offsetLeft:getOffset(element).left,
             offsetTop:getOffset(element).top,
             computedStyle:props,
-            boxSizing:props.boxSizing,
+            boxSizing:judgeIsNativeInline(element)?'border-box':props.boxSizing,
             children: [],
             props: {
                 flexDirection:getDefaultStyle(props,'flex-direction','flexDirection')|| getDefaultProp('flexDirection', props) || getDefaultProp('flexDirection'),
@@ -143,6 +145,14 @@ export default function readAll(element) {
         };
 
         dealInlineFlex(element)
+    }
+    while ( _childNode = element.childNodes[++_index]) {
+        if(!(_childNode instanceof Element)){
+            //ie 的button后面的换行符会留下空格
+            if(_childNode.textContent===' '){
+                _childNode.parentNode.removeChild(_childNode);
+            }
+        }
     }
     // for each child node of the element
     while (childNode = element.childNodes[++index]) {
@@ -162,7 +172,7 @@ export default function readAll(element) {
                     childDetails.classList=getClassList(childNode);
                     childDetails.offsetLeft=getOffset(childNode).left;
                     childDetails.offsetTop=getOffset(childNode).top;
-                    childDetails.boxSizing=_style.boxSizing,
+                    childDetails.boxSizing=judgeIsNativeInline(childNode)?'border-box':_style.boxSizing
                     childDetails.props={
                         alignSelf: getDefaultStyle(_style,'align-self')||_ele.props.alignItems,
                         order: getDefaultStyle(_style,'order','order') || getDefaultProp('order'),
