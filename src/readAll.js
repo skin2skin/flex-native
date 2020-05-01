@@ -77,7 +77,7 @@ function resetStyle(element){
         }
 
     }else{
-        element.setAttribute('style','')
+       // element.setAttribute('style','')
     }
 }
 
@@ -126,10 +126,8 @@ export default function readAll(element) {
             tag: element.localName,
             classList: getClassList(element),
             style:element.getAttribute('style')||'',
-            offsetLeft:getOffset(element).left,
-            offsetTop:getOffset(element).top,
             computedStyle:props,
-            boxSizing:judgeIsNativeInline(element)?'border-box':props.boxSizing,
+            boxSizing:props.boxSizing,
             children: [],
             props: {
                 flexDirection:getDefaultStyle(props,'flex-direction','flexDirection')|| getDefaultProp('flexDirection', props) || getDefaultProp('flexDirection'),
@@ -170,9 +168,7 @@ export default function readAll(element) {
                     childDetails.style=childNode.getAttribute('style')||'';
                     childDetails.isNativeInline=judgeIsNativeInline(childNode);
                     childDetails.classList=getClassList(childNode);
-                    childDetails.offsetLeft=getOffset(childNode).left;
-                    childDetails.offsetTop=getOffset(childNode).top;
-                    childDetails.boxSizing=judgeIsNativeInline(childNode)?'border-box':_style.boxSizing
+                    childDetails.boxSizing=_style.boxSizing
                     childDetails.props={
                         alignSelf: getDefaultStyle(_style,'align-self')||_ele.props.alignItems,
                         order: getDefaultStyle(_style,'order','order') || getDefaultProp('order'),
@@ -183,10 +179,8 @@ export default function readAll(element) {
                 //判断是否IE9，设置inline-block
                 if (navigator.appName == "Microsoft Internet Explorer" && parseInt(navigator.appVersion.split(";")[1].replace(/[ ]/g, "").replace("MSIE", "")) <= 9) {
                     childNode.style.display = 'inline-block';
+                    childNode.style.verticalAlign = 'middle';
                 }
-            }else{
-                childDetails.offsetLeft=getOffset(childNode).left;
-                childDetails.offsetTop=getOffset(childNode).top;
             }
 
             _ele.children.push(childDetails);

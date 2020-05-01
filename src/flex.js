@@ -89,7 +89,7 @@ class Flex {
         flexShrink: FLEX_SHRINK //属性定义了项目的缩小比例，默认为1，即如果空间不足，该项目将缩小
     };
 
-    init({ element, boxSizing, props, classList, style, offsetLeft, offsetTop, computedStyle, children }) {
+    init({ element, boxSizing, props, classList, style, offsetTop, computedStyle, children }) {
         this.props = props;
         this.element = element;
         this.classList = classList;
@@ -98,7 +98,7 @@ class Flex {
         this.boxSizing = boxSizing;
         const { flexDirection, flexWrap } = props;
         let wrapperRect = element.getBoundingClientRect();
-        console.log(wrapperRect)
+        console.log(wrapperRect,'--')
         let _innerWidth = -parseInt(computedStyle.paddingLeft) - parseInt(computedStyle.paddingRight) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.borderRightWidth);
         let _innerHeight = -parseInt(computedStyle.paddingTop) - parseInt(computedStyle.paddingBottom) - parseInt(computedStyle.borderTopWidth) - parseInt(computedStyle.borderBottomWidth);
         wrapperRect = {
@@ -106,8 +106,8 @@ class Flex {
             height: wrapperRect.height + _innerHeight
         };
         console.log(wrapperRect)
-        this.left = offsetLeft;
-        this.top = offsetTop;
+        this.left = getOffset(element).left;
+        this.top = getOffset(element).top;
         this.height = wrapperRect.height;
         this.width = wrapperRect.width;
 
@@ -169,8 +169,11 @@ class Flex {
             }
             let width = obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight);
             let height = obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom);
-            let _x = -(item.offsetLeft - parseInt(style.marginLeft) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.paddingLeft) - left);
-            let _y = -(item.offsetTop - parseInt(style.marginTop) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.paddingTop) - top);
+            let flex_width=obj.width- parseInt(style.borderLeftWidth)-parseInt(style.borderRightWidth) - parseInt(style.paddingLeft)-parseInt(style.paddingRight)
+            let flex_height=obj.height- parseInt(style.borderTopWidth)-parseInt(style.borderBottomWidth) - parseInt(style.paddingTop)-parseInt(style.paddingBottom)
+
+            let _x = -(getOffset(item.element).left - parseInt(style.marginLeft) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.paddingLeft) - left);
+            let _y = -(getOffset(item.element).top - parseInt(style.marginTop) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.paddingTop) - top);
             return {
                 element: item.element,
                 computedStyle: item.computedStyle,
@@ -187,6 +190,8 @@ class Flex {
                 paddingRight: parseInt(style.paddingRight),
                 height,
                 width,
+                flex_width,
+                flex_height,
                 x: _x,
                 y: _y,
             }
@@ -212,9 +217,10 @@ class Flex {
         remakePos.forEach((it, index) => {
             const item = Flex.findByIndex(array, index);
             const { element } = item;
-            //element.style[getPrefixAndProp('transform')] = createTransform(item);
+            element.style[getPrefixAndProp('transform')] = createTransform(item);
             const itemPrams = this.children[index];
             if (itemPrams.isFlex) {
+                console.log('children',this.children[index])
                 new Flex(this.children[index])
             }
             element.setAttribute('data-origin', it.style);
@@ -242,10 +248,9 @@ class Flex {
             const restWidth = this[W] - lineArrayWidth;
             let flexGrowArr = array.map(item => Number(item.props.flexGrow));
             const allRateGrow = flexGrowArr.reduce((a, b) => a + b, 0);
-            const allFlexShrink = array.map(item => Number(item.props.flexShrink)).reduce((a, b) => a + b, 0);
+            const allFlexShrinkWith = array.reduce((a, b) => {return a + Number(b.props.flexShrink)*b['flex_'+W]}, 0);
             array = array.map(item => {
-                console.log(restWidth)
-                let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth, allRateGrow, allFlexShrink);
+                let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth, allRateGrow, allFlexShrinkWith);
                 const offset = (item.boxSizing === 'border-box' ? 0 : (-item.borderLeftWidth - item.borderRightWidth-item.paddingLeft-item.paddingRight)) - item.marginLeft - item.marginRight;
                 item.withOffset = offset;
                 item.withOffset2 = needAdd;
@@ -277,7 +282,7 @@ class Flex {
                 height: wrapperRect.height + _innerHeight
             };
             this.height = wrapperRect.height;
-            console.log(wrapperRect)
+            console.log('height',this.height)
         }
         return _arr;
 
@@ -342,20 +347,22 @@ class Flex {
 
     /**
      * 每个div需要添加的宽度
+     * 参考 https://www.cnblogs.com/liyan-web/p/11217330.html
      * @param item
      * @param restWidth
      * @param allWidth
      * @param allRateGrow
-     * @param allFlexShrink
+     * @param allFlexShrinkWith
      * @returns {*}
      */
-    getNeedAddWidth(item, restWidth, allWidth, allRateGrow, allFlexShrink) {
+    getNeedAddWidth(item, restWidth, allWidth, allRateGrow, allFlexShrinkWith) {
+        console.log(allFlexShrinkWith)
         const { W } = this;
         let grow = Number(item.props['flexGrow']);
         let res;
         //缩小
         if (allWidth > this[W]) {
-            res = restWidth * (Number(item.props['flexShrink'])) / allFlexShrink;
+            res = restWidth * (Number(item.props['flexShrink'])*item['flex_'+W] / allFlexShrinkWith);
             // 放大
         } else if (allWidth < this[W] && grow) {
             res = restWidth * (grow / allRateGrow)
@@ -390,11 +397,11 @@ class Flex {
      * 开始布局
      */
     startLayout(arr) {
-         /*arr = this.setLineLocation(arr);
+         arr = this.setLineLocation(arr);
          arr = arr.map((item, it) => {
              item.lineArray = this.setLineItemLocation(item, arr, it);
              return item
-         });*/
+         });
         return arr
     }
 
