@@ -1,6 +1,6 @@
 //内联元素
 import {
-    createTransform, getOffset, getPrefixAndProp, getTransform
+    createTransform, getOffset, getPrefixAndProp, getRealHeight, getRealWidth, haveSetRealWidth
 } from "./utils";
 
 const inlineArr = ['a',
@@ -89,14 +89,15 @@ class Flex {
         flexShrink: FLEX_SHRINK //属性定义了项目的缩小比例，默认为1，即如果空间不足，该项目将缩小
     };
 
-    init({ element, boxSizing, props, classList, style, offsetTop, computedStyle, children }) {
+    init({element, boxSizing, isInlineFlex, props, classList, style, offsetTop, computedStyle, children}) {
         this.props = props;
         this.element = element;
         this.classList = classList;
         this.computedStyle = computedStyle;
         this.children = children;
         this.boxSizing = boxSizing;
-        const { flexDirection, flexWrap } = props;
+        this.isInlineFlex = isInlineFlex;
+        const {flexDirection, flexWrap} = props;
         let wrapperRect = element.getBoundingClientRect();
         let _innerWidth = -parseInt(computedStyle.paddingLeft) - parseInt(computedStyle.paddingRight) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.borderRightWidth);
         let _innerHeight = -parseInt(computedStyle.paddingTop) - parseInt(computedStyle.paddingBottom) - parseInt(computedStyle.borderTopWidth) - parseInt(computedStyle.borderBottomWidth);
@@ -106,7 +107,7 @@ class Flex {
         };
         this.left = getOffset(element).left;
         this.top = getOffset(element).top;
-        this.height = wrapperRect.height;
+        this.height = getRealHeight(element,_innerHeight,boxSizing) + _innerHeight;
         this.width = wrapperRect.width;
 
         this.style = style;
@@ -114,10 +115,10 @@ class Flex {
         let H = 'height';
         let X = 'x';
         let Y = 'y';
-        let L='Left';
-        let R='Right';
-        let T='Top';
-        let B='Bottom';
+        let L = 'Left';
+        let R = 'Right';
+        let T = 'Top';
+        let B = 'Bottom';
         let FLEX_START = 'FLEX_START';
         let FLEX_END = 'FLEX_END';
         if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
@@ -125,10 +126,10 @@ class Flex {
             H = 'width';
             X = 'y';
             Y = 'x';
-            L='Top';
-            R='Bottom';
-            T='Left';
-            B='Right';
+            L = 'Top';
+            R = 'Bottom';
+            T = 'Left';
+            B = 'Right';
         }
         if (flexWrap === FLEX_WRAP.WRAP_REVERSE) {
             FLEX_START = 'FLEX_END';
@@ -138,18 +139,18 @@ class Flex {
         this.H = H;
         this.X = X;
         this.Y = Y;
-        this.L=L;
-        this.R=R;
-        this.T=T;
-        this.B=B;
+        this.L = L;
+        this.R = R;
+        this.T = T;
+        this.B = B;
         this.FLEX_START = FLEX_START;
         this.FLEX_END = FLEX_END;
 
     }
 
     initState() {
-        const { style, computedStyle, left, top, element, children, W } = this;
-        const { flexDirection } = this.props;
+        const {style, computedStyle, left, top, element, children, W} = this;
+        const {flexDirection} = this.props;
         let _children = children.sort((a, b) => {
             const aOrder = a.props.order;
             const bOrder = b.props.order;
@@ -178,8 +179,8 @@ class Flex {
             }
             let width = obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight);
             let height = obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom);
-            let flex_width=obj.width- parseInt(style.borderLeftWidth)-parseInt(style.borderRightWidth) - parseInt(style.paddingLeft)-parseInt(style.paddingRight)
-            let flex_height=obj.height- parseInt(style.borderTopWidth)-parseInt(style.borderBottomWidth) - parseInt(style.paddingTop)-parseInt(style.paddingBottom)
+            let flex_width = obj.width - parseInt(style.borderLeftWidth) - parseInt(style.borderRightWidth) - parseInt(style.paddingLeft) - parseInt(style.paddingRight)
+            let flex_height = obj.height - parseInt(style.borderTopWidth) - parseInt(style.borderBottomWidth) - parseInt(style.paddingTop) - parseInt(style.paddingBottom)
 
             let _x = -(getOffset(item.element).left - parseInt(style.marginLeft) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.paddingLeft) - left);
             let _y = -(getOffset(item.element).top - parseInt(style.marginTop) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.paddingTop) - top);
@@ -213,13 +214,15 @@ class Flex {
         }).filter((item) => !item.isFixed);
         //创建流动布局
         const flowBox = this.createFlowBox(remakePos);
-         this.height = this.computedStyle.height ?this.height : flowBox.reduce((al, b) => {
-             if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
-                 return al + b.lineArrayWidth
-             } else {
-                 return al + b.max
-             }
-         }, 0);
+
+        this.height = this.computedStyle.height ? this.height : flowBox.reduce((al, b) => {
+            if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
+                return al + b.lineArrayWidth
+            } else {
+                return al + b.max
+            }
+        }, 0);
+
         //开始布局
         const array = this.startLayout(flowBox);
         // element.style['height'] = this.height.toFixed(6) + 'px';
@@ -229,7 +232,7 @@ class Flex {
         this.flowLayoutBox = array;
         remakePos.forEach((it, index) => {
             const item = Flex.findByIndex(array, index);
-            const { element } = item;
+            const {element} = item;
             element.style[getPrefixAndProp('transform')] = createTransform(item);
             const itemPrams = this.children[index];
             if (itemPrams.isFlex) {
@@ -245,7 +248,7 @@ class Flex {
      * @param {} item
      */
     getStretchMax(item) {
-        const { H } = this;
+        const {H} = this;
 
         return Math.max(...item.filter(item => !item.isFixed).map(a => a[H]))
     }
@@ -254,34 +257,48 @@ class Flex {
      *根据flexGrow和FlexShrink重新定义宽度或者高度
      */
     resetWidthByShrinkAndGrow(arr) {
-        const { W,L,R,T,B } = this;
-        const _arr = arr.map(array => {
+        const {flexDirection} = this.props;
+        const {W, L, R, isInlineFlex, computedStyle, boxSizing} = this;
+        let _arr = arr.map(array => {
             const lineArrayWidth = array.reduce((al, item) => al + item[W], 0);
             const restWidth = this[W] - lineArrayWidth;
             let flexGrowArr = array.map(item => Number(item.props.flexGrow));
             const allRateGrow = flexGrowArr.reduce((a, b) => a + b, 0);
-            const allFlexShrinkWith = array.reduce((a, b) => {return a + Number(b.props.flexShrink)*b['flex_'+W]}, 0);
+            const allFlexShrinkWith = array.reduce((a, b) => {
+                return a + Number(b.props.flexShrink) * b['flex_' + W]
+            }, 0);
             array = array.map(item => {
                 let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth, allRateGrow, allFlexShrinkWith);
-                const offset = (item.boxSizing === 'border-box' ? 0 : (-item[`border${L}Width`] - item[`border${R}Width`]-item[`padding${L}`]-item[`padding${R}`])) - item[`margin${L}`] - item[`margin${R}`];
+                const offset = (item.boxSizing === 'border-box' ? 0 : (-item[`border${L}Width`] - item[`border${R}Width`] - item[`padding${L}`] - item[`padding${R}`])) - item[`margin${L}`] - item[`margin${R}`];
                 item.withOffset = offset;
                 item.withOffset2 = needAdd;
                 return item;
             });
-            const { computedStyle } = this;
+
             array = array.map((item) => {
                 item[W] = item[W] + item.withOffset2;
                 const acWidth = item[this.W] + item.withOffset;
                 item.element.style[this.W] = (acWidth < 0 ? 0.000000 : acWidth.toFixed(6)) + 'px';
                 return item;
             });
-            //为什么不放在上面是因为 上面那个遍历在设置宽度 如果在本身就支持flex的浏览器中 会导致 设置的item的后面会宽度会自动变化
+            return array;
+        });
+        //div是inline-flex且flex-direction包含column时且没有设置宽度
+        if (isInlineFlex && flexDirection.includes(FLEX_DIRECTION.COLUMN) && !haveSetRealWidth(this.element)) {
+            const max = _arr.reduce((al, b) => al + this.getStretchMax(b), 0);
+            const _max = max + (boxSizing === 'border-box' ? (parseInt(computedStyle.paddingLeft) + parseInt(computedStyle.paddingRight) + parseInt(computedStyle.borderLeftWidth) + parseInt(computedStyle.borderRightWidth)) : 0);
+            this.width = max;
+            this.element.style['width'] = (_max).toFixed(6) + 'px';
+        }
+
+        //为什么不放在上面是因为 上面那个遍历在设置宽度 如果在本身就支持flex的浏览器中 会导致 设置的item的后面会宽度会自动变化
+        _arr = _arr.map(array => {
             array = array.map((item) => {
                 item.x = -(getOffset(item.element).left - parseInt(item.computedStyle.marginLeft) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.paddingLeft) - getOffset(item.element.parentNode).left);
                 item.y = -(getOffset(item.element).top - parseInt(item.computedStyle.marginTop) - parseInt(computedStyle.borderTopWidth) - parseInt(computedStyle.paddingTop) - getOffset(item.element.parentNode).top);
                 return item;
             });
-            return array;
+            return array
         });
 
         //重新设置高度
@@ -307,8 +324,8 @@ class Flex {
      * @returns {any[]}
      */
     getFlatArray(remakePos, wrapperStyle) {
-        const { flexDirection, flexWrap } = this.props;
-        const { W, X } = this;
+        const {flexDirection, flexWrap} = this.props;
+        const {W, X} = this;
         let arr = [];
         if (flexWrap === FLEX_WRAP.NOWRAP) {
             arr.push(remakePos)
@@ -368,12 +385,12 @@ class Flex {
      * @returns {*}
      */
     getNeedAddWidth(item, restWidth, allWidth, allRateGrow, allFlexShrinkWith) {
-        const { W } = this;
+        const {W} = this;
         let grow = Number(item.props['flexGrow']);
         let res;
         //缩小
         if (allWidth > this[W]) {
-            res = restWidth * (Number(item.props['flexShrink'])*item['flex_'+W] / allFlexShrinkWith);
+            res = restWidth * (Number(item.props['flexShrink']) * item['flex_' + W] / allFlexShrinkWith);
             // 放大
         } else if (allWidth < this[W] && grow) {
             res = restWidth * (grow / allRateGrow)
@@ -388,7 +405,7 @@ class Flex {
      * @param remakePos
      */
     createFlowBox(remakePos) {
-        const { Y, style } = this;
+        const {Y, style} = this;
         let posArr = this.getFlatArray(remakePos, style);
         return posArr.map((item, it) => {
             const getTop = (posArr.filter((a, b) => b <= it - 1).reduce((a, b) => a + b.max, 0));
@@ -408,11 +425,11 @@ class Flex {
      * 开始布局
      */
     startLayout(arr) {
-         arr = this.setLineLocation(arr);
-         arr = arr.map((item, it) => {
-             item.lineArray = this.setLineItemLocation(item, arr, it);
-             return item
-         });
+        arr = this.setLineLocation(arr);
+        arr = arr.map((item, it) => {
+            item.lineArray = this.setLineItemLocation(item, arr, it);
+            return item
+        });
         return arr
     }
 
@@ -439,8 +456,8 @@ class Flex {
      */
     setLineLocation(arr) {
 
-        const { H, Y, FLEX_START, FLEX_END } = this;
-        let { alignContent, flexWrap } = this.props;
+        const {H, Y, FLEX_START, FLEX_END} = this;
+        let {alignContent, flexWrap} = this.props;
         //alignContent属性定义了多根轴线的对齐方式。如果项目只有一根轴线，该属性不起作用
         if (flexWrap === FLEX_WRAP.NOWRAP) {
             alignContent = ALIGN_CONTENT.STRETCH
@@ -538,8 +555,8 @@ class Flex {
      * @returns {*}
      */
     setLineItemLocation(item, arr = [], index) {
-        const { W, H, X, Y, FLEX_START, FLEX_END } = this;
-        const { flexDirection, justifyContent, alignItems } = this.props;
+        const {W, H, X, Y, FLEX_START, FLEX_END} = this;
+        const {flexDirection, justifyContent, alignItems} = this.props;
         const allLength = item.lineArray.reduce((al, b) => al + b[W], 0);
         let restLength = (this[W] - allLength) || 0;
         //如果是不换行的情况下没有超出

@@ -144,11 +144,10 @@ function kebabToTitleCase(str) {
  * @returns {boolean}
  */
 export function supportsFlexBox() {
-    let test = document.createElement('test');
-
-    test.style.display = 'flex';
-
-    return test.style.display === 'flex';
+    return 'MozFlex' in document.documentElement.style ||
+        'WebkitFlex' in document.documentElement.style ||
+        'OFlex' in document.documentElement.style ||
+        'msFlex' in document.documentElement.style
 }
 
 /**
@@ -190,15 +189,15 @@ export function getStyleFromCssText(styleText) {
  * @param curEle
  * @returns {{left: *, top: *}}
  */
-export function getOffset(curEle){
-    let totalLeft = null,totalTop = null,par = curEle.offsetParent;
+export function getOffset(curEle) {
+    let totalLeft = null, totalTop = null, par = curEle.offsetParent;
     //首先把自己本身的进行累加
     totalLeft += curEle.offsetLeft;
     totalTop += curEle.offsetTop;
 
     //只要没有找到body，我们就把父级参照物的边框和偏移量累加
-    while(par){
-        if(navigator.userAgent.indexOf("MSIE 8.0") === -1){
+    while (par) {
+        if (navigator.userAgent.indexOf("MSIE 8.0") === -1) {
             //不是标准的ie8浏览器，才进行边框累加
             //累加父级参照物边框
             totalLeft += par.clientLeft;
@@ -209,5 +208,39 @@ export function getOffset(curEle){
         totalTop += par.offsetTop;
         par = par.offsetParent;
     }
-    return {left:totalLeft,top:totalTop};
+    return {left: totalLeft, top: totalTop};
+}
+
+/**
+ * 当div没有高度时重新设置fexDiv的高度
+ */
+export function getRealHeight(element,innerHeight,boxSizing) {
+    const childNodesList = Array.from(element.childNodes);
+    const height = element.getBoundingClientRect().height;
+    childNodesList.forEach(ele => {
+        ele.style.display = 'block'
+    });
+    const _height = element.getBoundingClientRect().height;
+    childNodesList.forEach(ele => {
+        ele.style.display = 'inline-block'
+    });
+    if (!supportsFlexBox() && height !== _height) {
+        const __height=_height+(boxSizing==='border-box'?0:innerHeight);
+        element.style['height'] = __height.toFixed(6) + 'px';
+        return _height+1;
+    }
+    return height
+}
+
+/**
+ * 当div是inline-flex且flex-direction包含column时是否设置了宽度
+ */
+export function haveSetRealWidth(element) {
+    const width = element.getBoundingClientRect().width;
+    const txt_width = element.childNodes[0].style.width;
+    element.childNodes[0].style.width = (width + 10) + 'px';
+    const _width = element.getBoundingClientRect().width;
+    element.childNodes[0].style.width = txt_width;
+    return !(!supportsFlexBox() && width !== _width);
+
 }

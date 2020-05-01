@@ -12,8 +12,8 @@
         }
 
         .wrapper {
-            width: 1000px;
-            height: 800px;
+           // width: 500px;
+            //height: 456px;
             border: 5px solid #cccccc;
             margin: 10px;
             margin-left: 30px;
@@ -60,7 +60,7 @@
         .etty {
             -js-display: flex;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             flex-wrap: wrap;
             align-items: center;
             justify-content: center;
@@ -133,8 +133,8 @@
         }
 
         * {
-         box-sizing: content-box;
-            //box-sizing: border-box;
+             //box-sizing: content-box;
+            box-sizing: border-box;
         }
     </style>
 
@@ -152,10 +152,6 @@
             <div></div>
             <div></div>
         </div>
-    </div>
-    <div style="width: 200px;margin: auto;border: 10px solid #000;padding:10px;display: flex">
-        <div style="flex-shrink: 2;width: 150px;">one</div>
-        <div style="flex-shrink: 1;width: 100px;">two</div>
     </div>
     <div class="wrapper etty ii">
         <div class="fk_ntn">122222222222</div>
@@ -186,7 +182,7 @@
         <div class="box2" style="flex-shrink:6;">2</div>
 
     </div>-->
-    <div class="wrapper etty">
+  <!--  <div class="wrapper etty">
         <div class="box" style="flex-shrink:2;">1</div>
         <div class="box2" style="flex-shrink:2;">2</div>
         <div class="box2" style="flex-shrink:6;">2</div>
@@ -200,10 +196,10 @@
          <div class="box" v-bind:style="styleObject">菜鸟教程</div>
          <div class="box2" style="flex-shrink:2;">2</div>
          <div class="box2" style="flex-shrink:6;">2</div>
-     </div>
+     </div>-->
 </div>
 <script>
-    new Vue({
+   /* new Vue({
         el: '#app',
         data: {
             styleObject: {
@@ -214,11 +210,11 @@
         },
         mounted:function () {
             var _this=this;
-            /*setTimeout(function () {
+            setTimeout(function () {
                 _this.styleObject.width='100px'
-            },1000);*/
+            },1000);
         }
-    })
+    })*/
 
 </script>
 </body>
