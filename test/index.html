@@ -58,13 +58,13 @@
         }
 
         .etty {
-            -js-display: flex;
-            display: flex;
+            -js-display: inline-flex;
+            display: inline-flex;
             flex-direction: row;
             flex-wrap: wrap;
             align-items: center;
             justify-content: center;
-        / / align-content: center;
+            //align-content: baseline;
         }
 
         .etty2 {
@@ -73,7 +73,7 @@
             flex-wrap: nowrap;
             /* align-items: center*/
             /* justify-content: center;  */
-            align-items: flex-start;
+            align-items: center;
             justify-content: center;
             border: 1px solid #cccccc;
 
@@ -84,7 +84,9 @@
             border: 1px solid #cccccc;
         }
 
-        .etty > div {
+        .etty > * {
+            display: inline-block;
+           // vertical-align: baseline;
         / / width: 10 %;
         }
 
@@ -94,6 +96,7 @@
             width: 100px;
             //padding: 10px;
             height: 200px;
+            align-items: flex-end;
         }
 
         .bo > div {
@@ -145,8 +148,8 @@
     <div class="wrapper etty ii">
         <button>122222222222</button>
         <button>1</button>
-        <textarea>234</textarea>
-        <div class="bo">
+        <textarea>2349999999999999999999999999999999999999999999999999</textarea>
+        <div class="bo" style="position: fixed;left: 0;top: 0;">
             <div id="oi"></div>
             <div></div>
             <div></div>
@@ -156,7 +159,7 @@
     <div class="wrapper etty ii">
         <div class="fk_ntn">122222222222</div>
         <div class="fk_ntn">1</div>
-        <div class="fk_tx"></div>
+        <div class="fk_tx">234</div>
         <div class="bo">
             <div id="oi"></div>
             <div></div>
