@@ -3,33 +3,6 @@ import {
     createTransform, getOffset, getPrefixAndProp, getRealHeight, getRealWidth, haveSetRealWidth
 } from "./utils";
 
-const inlineArr = ['a',
-    'abbr',
-    'acronym',
-    'b',
-    'bdo',
-    'big',
-    'br',
-    'cite',
-    'code',
-    'dfn',
-    'em',
-    'font',
-    'i',
-    'kbd',
-    'label',
-    'q',
-    's',
-    'samp',
-    'small',
-    'span',
-    'strike',
-    'strong',
-    'sub',
-    'sup',
-    'tt',
-    'u'];
-
 const JUSTIFY_CONTENT = {
     FLEX_START: 'flex-start',
     FLEX_END: 'flex-end',
@@ -89,10 +62,9 @@ class Flex {
         flexShrink: FLEX_SHRINK //属性定义了项目的缩小比例，默认为1，即如果空间不足，该项目将缩小
     };
 
-    init({element, boxSizing, isInlineFlex, props, classList, style, offsetTop, computedStyle, children}) {
+    init({element, boxSizing, isInlineFlex, props, style, offsetTop, computedStyle, children}) {
         this.props = props;
         this.element = element;
-        this.classList = classList;
         this.computedStyle = computedStyle;
         this.children = children;
         this.boxSizing = boxSizing;
@@ -107,7 +79,7 @@ class Flex {
         };
         this.left = getOffset(element).left;
         this.top = getOffset(element).top;
-        this.height = getRealHeight(element,_innerHeight,boxSizing) + _innerHeight;
+        this.height = getRealHeight(element, _innerHeight, boxSizing) + _innerHeight;
         this.width = wrapperRect.width;
 
         this.style = style;
@@ -149,34 +121,21 @@ class Flex {
     }
 
     initState() {
-        const {style, computedStyle, left, top, element, children, W} = this;
-        const {flexDirection} = this.props;
+        const {style, computedStyle, left, top, element, children} = this;
+
         let _children = children.sort((a, b) => {
             const aOrder = a.props.order;
             const bOrder = b.props.order;
             return Number(aOrder) - Number(bOrder);
         });
-        const remakePos = _children.map((item, index) => {
+        const _remakePos = _children.map((item) => {
             const obj = item.element.getBoundingClientRect();
             const nativeStyle = item.style;
             const style = item.computedStyle;
 
             //排除掉fixed等影响布局的
             const isFixed = (style.position === 'absolute' || style.position === 'fixed');
-            if (isFixed) {
-                return {
-                    isFixed,
-                    props: {},
-                    borderLeftWidth: 0,
-                    borderRightWidth: 0,
-                    marginLeft: 0,
-                    marginRight: 0,
-                    width: 0,
-                    height: 0,
-                    x: 0,
-                    y: 0,
-                }
-            }
+
             let width = obj.width + parseInt(style.marginLeft) + parseInt(style.marginRight);
             let height = obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom);
             let flex_width = obj.width - parseInt(style.borderLeftWidth) - parseInt(style.borderRightWidth) - parseInt(style.paddingLeft) - parseInt(style.paddingRight)
@@ -188,8 +147,9 @@ class Flex {
                 element: item.element,
                 computedStyle: item.computedStyle,
                 style: nativeStyle,
-                isNativeInline: item.isNativeInline,
+                children: item.children,
                 isFixed,
+                isFlex: item.isFlex,
                 boxSizing: item.boxSizing,
                 props: item.props,
                 borderLeftWidth: parseInt(style.borderLeftWidth),
@@ -211,36 +171,40 @@ class Flex {
                 x: _x,
                 y: _y,
             }
-        }).filter((item) => !item.isFixed);
+        });
+        const remakePos = _remakePos.filter((item) => !item.isFixed);
+
+        //是absolute或者fixed布局且是flex布局的div列表
+        const fixedBoxes = _remakePos.filter((item) => item.isFixed && item.isFixed);
+
         //创建流动布局
         const flowBox = this.createFlowBox(remakePos);
 
-        this.height = this.computedStyle.height ? this.height : flowBox.reduce((al, b) => {
-            if (flexDirection.includes(FLEX_DIRECTION.COLUMN)) {
-                return al + b.lineArrayWidth
-            } else {
-                return al + b.max
-            }
-        }, 0);
-
         //开始布局
         const array = this.startLayout(flowBox);
-        // element.style['height'] = this.height.toFixed(6) + 'px';
+
         element.style.opacity = 1;
         element.setAttribute('data-origin', style);
         element.setAttribute('data-style', element.getAttribute('style'));
+
         this.flowLayoutBox = array;
-        remakePos.forEach((it, index) => {
-            const item = Flex.findByIndex(array, index);
-            const {element} = item;
-            element.style[getPrefixAndProp('transform')] = createTransform(item);
-            const itemPrams = this.children[index];
-            if (itemPrams.isFlex) {
-                new Flex(this.children[index])
-            }
-            element.setAttribute('data-origin', it.style);
-            element.setAttribute('data-style', element.getAttribute('style'));
+
+        array.forEach(({lineArray}) => {
+            lineArray.forEach(item => {
+                const {element} = item;
+                element.style[getPrefixAndProp('transform')] = createTransform(item);
+                if (item.isFlex) {
+                    new Flex(item)
+                }
+                element.setAttribute('data-origin', item.style);
+                element.setAttribute('data-style', element.getAttribute('style'));
+            })
         });
+        //设置 盒子是fixed且是flex
+        fixedBoxes.forEach(item => {
+            new Flex(item)
+        })
+
     }
 
     /**
@@ -467,22 +431,25 @@ class Flex {
             return al + item.max
         }, 0);
 
+        const stretchDefaultDeal=()=>{
+            arr = arr.map((item, index) => {
+                const restHeight = this[H] - allHeight;
+                const marginTop = restHeight / arr.length;
+                item.axisHeight = item.max + marginTop;
+                //得到前面的总的行高度
+                const marginZero = marginTop * index;
+                item.lineArray = item.lineArray.map(rect => ({
+                    ...rect,
+                    [Y]: rect[Y] + marginZero
+                }));
+                return item
+            });
+        };
+
         //定义多根轴线的对齐方式
         switch (alignContent) {
             case ALIGN_CONTENT.STRETCH:
-                arr = arr.map((item, index) => {
-
-                    const restHeight = this[H] - allHeight;
-                    const marginTop = restHeight / arr.length;
-                    item.axisHeight = item.max + marginTop;
-                    //得到前面的总的行高度
-                    const marginZero = marginTop * index;
-                    item.lineArray = item.lineArray.map(rect => ({
-                        ...rect,
-                        [Y]: rect[Y] + marginZero
-                    }));
-                    return item
-                });
+                stretchDefaultDeal();
                 break;
             case ALIGN_CONTENT[FLEX_START]:
                 arr = arr.map((item, index) => {
@@ -541,6 +508,9 @@ class Flex {
                     }
                     return item;
                 });
+                break;
+            default:
+                stretchDefaultDeal();
                 break;
 
         }
@@ -617,6 +587,8 @@ class Flex {
                     return rect
                 });
                 break;
+            default:
+                break;
         }
         switch (alignItems) {
             case ALIGN_ITEMS[FLEX_START]:
@@ -671,6 +643,9 @@ class Flex {
 
                 break;
             case ALIGN_ITEMS.BASELINE:
+                console.warn('do not support baseline ');
+                break;
+            default:
                 break;
         }
 

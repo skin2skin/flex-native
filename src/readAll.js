@@ -57,7 +57,11 @@ function dealInlineFlex(element) {
  * 重置上一次的渲染
  */
 function resetStyle(element) {
-    element.style.opacity = 0;
+    const _style = getStyle(element);
+    if(_style.position !== 'absolute' && _style.position !== 'fixed'){
+        element.style.opacity = 0;
+    }
+
     const oriStyleText = getDataSet(element, 'origin');
     if (oriStyleText) {
         const nowStyleText = element.getAttribute('style');
@@ -102,7 +106,6 @@ export default function readAll(element) {
     let isDisplayFlex = isFlexBox(element);
     let _ele = {
         element,
-        classList: [],
         style: '',
         offsetLeft: 0,
         offsetTop: 0,
@@ -129,10 +132,8 @@ export default function readAll(element) {
         _ele = {
             element,
             isFlex: true,
-            isNativeInline: judgeIsNativeInline(element),
             isInlineFlex: isInlineFlex,
             tag: element.localName,
-            classList: getClassList(element),
             style: element.getAttribute('style') || '',
             computedStyle: props,
             boxSizing: props.boxSizing,
@@ -172,10 +173,9 @@ export default function readAll(element) {
                 //如果父类为flex且自己不是flex的时候
                 if (!isFlexBox(childNode)) {
                     const _style = getStyle(childNode);
+                    childDetails.isFlex=false;
                     childDetails.computedStyle = _style;
                     childDetails.style = childNode.getAttribute('style') || '';
-                    childDetails.isNativeInline = judgeIsNativeInline(childNode);
-                    childDetails.classList = getClassList(childNode);
                     childDetails.boxSizing = _style.boxSizing;
                     childDetails.props = {
                         alignSelf: getDefaultStyle(_style, 'align-self') || _ele.props.alignItems,
@@ -183,11 +183,16 @@ export default function readAll(element) {
                         flexShrink: getDefaultStyle(_style, 'flex-shrink', 'flexShrink') || getDefaultProp('flexShrink', _style) || getDefaultProp('flexShrink'),
                         flexGrow: getDefaultStyle(_style, 'flex-grow', 'flexGrow') || getDefaultProp('flexGrow', _style) || getDefaultProp('flexGrow')
                     }
+                }else{
+                    childDetails.isFlex=true;
                 }
                 //判断是否支持flex，设置inline-block
                 if (!supportsFlexBox()) {
-                    childNode.style.display = 'inline-block';
-                    childNode.style.verticalAlign = 'middle';
+                    const _style = getStyle(childNode);
+                    if(_style.position !== 'absolute' && _style.position !== 'fixed'){
+                        childNode.style.display = 'inline-block';
+                        childNode.style.verticalAlign = 'middle';
+                    }
                 }
             }
 

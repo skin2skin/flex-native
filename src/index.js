@@ -63,7 +63,7 @@ function main(ele = document) {
     isUpdateInner = true;
     observer && observer.disconnect();
     //let time = new Date().getTime();
-    const flexBox = [readAll(ele)];
+   const flexBox = [readAll(ele)];
     //console.log(flexBox)
     //开始设置位置
     render(flexBox);

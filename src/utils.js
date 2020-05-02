@@ -214,20 +214,26 @@ export function getOffset(curEle) {
 /**
  * 当div没有高度时重新设置fexDiv的高度
  */
-export function getRealHeight(element,innerHeight,boxSizing) {
+export function getRealHeight(element, innerHeight, boxSizing) {
     const childNodesList = Array.from(element.childNodes);
     const height = element.getBoundingClientRect().height;
     childNodesList.forEach(ele => {
-        ele.style.display = 'block'
+        const _style = getStyle(ele);
+        if (_style.position !== 'absolute' && _style.position !== 'fixed') {
+            ele.style.display = 'block'
+        }
     });
     const _height = element.getBoundingClientRect().height;
     childNodesList.forEach(ele => {
-        ele.style.display = 'inline-block'
+        const _style = getStyle(ele);
+        if (_style.position !== 'absolute' && _style.position !== 'fixed') {
+            ele.style.display = 'inline-block'
+        }
     });
     if (!supportsFlexBox() && height !== _height) {
-        const __height=_height+(boxSizing==='border-box'?0:innerHeight);
+        const __height = _height + (boxSizing === 'border-box' ? 0 : innerHeight);
         element.style['height'] = __height.toFixed(6) + 'px';
-        return _height+1;
+        return _height + 1;
     }
     return height
 }
@@ -237,10 +243,12 @@ export function getRealHeight(element,innerHeight,boxSizing) {
  */
 export function haveSetRealWidth(element) {
     const width = element.getBoundingClientRect().width;
-    const txt_width = element.childNodes[0].style.width;
-    element.childNodes[0].style.width = (width + 10) + 'px';
+    const div = document.createElement('div');
+    element.appendChild(div);
+    div.style.display = 'inline-block';
+    div.style.width = '10px';
     const _width = element.getBoundingClientRect().width;
-    element.childNodes[0].style.width = txt_width;
+    div.parentNode.removeChild(div);
     return !(!supportsFlexBox() && width !== _width);
 
 }
