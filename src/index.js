@@ -11,11 +11,7 @@ const update = (e) => {
 const updateGoogle = debounce((list) => {
 
     if(Array.isArray(list)){
-        const set = new Set(list.map(item => item.target));
-
-        Array.from(set).forEach(node => {
-           main();
-        });
+        main();
     }else{
         main();
     }
@@ -60,19 +56,22 @@ const render = (flexBox) => {
  * 入口函数
  */
 function main(ele = document) {
-    isUpdateInner = true;
-    observer && observer.disconnect();
-    //let time = new Date().getTime();
-   const flexBox = [readAll(ele)];
-    //console.log(flexBox)
-    //开始设置位置
-    render(flexBox);
-    //console.log('time',new Date().getTime()-time);
-    setTimeout(() => {
-        isUpdateInner = false;
-        observer && observer.observe(document, config);
-    }, 0)
-
+    try {
+        isUpdateInner = true;
+        observer && observer.disconnect();
+        //let time = new Date().getTime();
+        const flexBox = [readAll(ele)];
+        //console.log(flexBox)
+        //开始设置位置
+        render(flexBox);
+        //console.log('time',new Date().getTime()-time);
+        setTimeout(() => {
+            isUpdateInner = false;
+            observer && observer.observe(document, config);
+        }, 0)
+    }catch(e){
+        console.error(e)
+    }
 }
 
 main();
