@@ -32,7 +32,7 @@ npm install flex-native
 ### 🔨 Usage
 - Use in normal HTML
 ```javascript
-<script src='./flex-native.min.js'>;
+<script src='https://unpkg.com/flex-native@latest'>;
 ```
 - Use in module
 ```javascript

@@ -27,7 +27,7 @@ npm install flex-native
 ### 🔨 使用
 - 在普通的HTML中使用
 ```javascript
-<script src='./flex-native.min.js'>
+<script src='https://unpkg.com/flex-native@latest'>
 ```
 - 在模块化中使用
 ```javascript
