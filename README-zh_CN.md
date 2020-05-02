@@ -33,20 +33,21 @@ npm install flex-native
 ```javascript
 import('flex-native');
 ```
-- CSS中
+   使用时请在CSS中的任何`display: flex`声明之前添加一个 `-js-display: flex`声明，
+或在构建过程中使用[PostCSS Flexibility](https://github.com/7rulnik/postcss-flexibility)自动添加-js前缀。
+- Css中
 	<br>
 	.wrapper{     
-		-js-display:flex;
-		display:flex;
-		align-items:center;
-		justify-content:center;
-		<br>
+		-js-display:flex;<br>
+        display:flex;<br>
+		align-items:center;<br>
+		justify-content:center;<br>
 		}
-		注意需要在css中写入-js-display这个自定义属性才能被ie识别
+		
 - 元素上
-	<br>
-	&lt;div style='display:flex;align-items:center&gt;
-	<br>
+       <br>
+        &lt;div style='display:flex;align-items:center' /&gt;
+       <br>
 	
 总的来说和普通写css没有区别
 

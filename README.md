@@ -38,21 +38,24 @@ npm install flex-native
 ```javascript
 import('flex-native');
 ```
+
+
+add a `-js-display: flex` declaration before any `display: flex` declarations in your CSS, or use [PostCSS Flexibility](https://github.com/7rulnik/postcss-flexibility) to automate this during your build process.
+like this;
 - css
 	<br>
 	.wrapper{     
-		-js-display:flex;
-        display:flex;
-		align-items:center;
-		justify-content:center;
-		<br>
+		-js-display:flex;<br>
+        display:flex;<br>
+		align-items:center;<br>
+		justify-content:center;<br>
 		}
-Note that you need to write the custom attribute -js-display in CSS to be recognized by ie
+		
 - inline
-	<br>
-	&lt;div style='display:flex;align-items:center&gt;
-	<br>
-	
+       <br>
+        &lt;div style='display:flex;align-items:center' /&gt;
+       <br>
+        	
 Generally speaking, it's no different from writing CSS
 
 ### 🤝 Contributor
