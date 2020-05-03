@@ -79,7 +79,7 @@ class Flex {
         };
         this.left = getOffset(element).left;
         this.top = getOffset(element).top;
-        this.height = getRealHeight(element, _innerHeight, boxSizing) + _innerHeight;
+        this.height = getRealHeight(element, _innerHeight, boxSizing,flexWrap===FLEX_WRAP.NOWRAP) + _innerHeight;
         this.width = wrapperRect.width;
 
         this.style = style;
@@ -140,7 +140,6 @@ class Flex {
             let height = obj.height + parseInt(style.marginTop) + parseInt(style.marginBottom);
             let flex_width = obj.width - parseInt(style.borderLeftWidth) - parseInt(style.borderRightWidth) - parseInt(style.paddingLeft) - parseInt(style.paddingRight)
             let flex_height = obj.height - parseInt(style.borderTopWidth) - parseInt(style.borderBottomWidth) - parseInt(style.paddingTop) - parseInt(style.paddingBottom)
-
             let _x = -(getOffset(item.element).left - parseInt(style.marginLeft) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.paddingLeft) - left);
             let _y = -(getOffset(item.element).top - parseInt(style.marginTop) - parseInt(computedStyle.borderLeftWidth) - parseInt(computedStyle.paddingTop) - top);
             return {
@@ -223,7 +222,9 @@ class Flex {
     resetWidthByShrinkAndGrow(arr) {
         const {flexDirection} = this.props;
         const {W, L, R, isInlineFlex, computedStyle, boxSizing} = this;
+
         let _arr = arr.map(array => {
+
             const lineArrayWidth = array.reduce((al, item) => al + item[W], 0);
             const restWidth = this[W] - lineArrayWidth;
             let flexGrowArr = array.map(item => Number(item.props.flexGrow));
@@ -231,6 +232,7 @@ class Flex {
             const allFlexShrinkWith = array.reduce((a, b) => {
                 return a + Number(b.props.flexShrink) * b['flex_' + W]
             }, 0);
+
             array = array.map(item => {
                 let needAdd = this.getNeedAddWidth(item, restWidth, lineArrayWidth, allRateGrow, allFlexShrinkWith);
                 const offset = (item.boxSizing === 'border-box' ? 0 : (-item[`border${L}Width`] - item[`border${R}Width`] - item[`padding${L}`] - item[`padding${R}`])) - item[`margin${L}`] - item[`margin${R}`];
@@ -241,8 +243,8 @@ class Flex {
 
             array = array.map((item) => {
                 item[W] = item[W] + item.withOffset2;
-                const acWidth = item[this.W] + item.withOffset;
-                item.element.style[this.W] = (acWidth < 0 ? 0.000000 : acWidth.toFixed(6)) + 'px';
+                const acWidth = item[W] + item.withOffset;
+                item.element.style[W] = (acWidth < 0 ? 0.000000 : acWidth.toFixed(6)) + 'px';
                 return item;
             });
             return array;
@@ -315,6 +317,7 @@ class Flex {
 
         //根据flexGrow和FlexShrink重新定义宽度或者高度
         arr = this.resetWidthByShrinkAndGrow(arr);
+
         if (flexWrap === FLEX_WRAP.WRAP_REVERSE) {
             arr = arr.reverse()
         }
@@ -351,10 +354,12 @@ class Flex {
     getNeedAddWidth(item, restWidth, allWidth, allRateGrow, allFlexShrinkWith) {
         const {W} = this;
         let grow = Number(item.props['flexGrow']);
+
         let res;
         //缩小
         if (allWidth > this[W]) {
             res = restWidth * (Number(item.props['flexShrink']) * item['flex_' + W] / allFlexShrinkWith);
+            //console.log('123--',item.props);
             // 放大
         } else if (allWidth < this[W] && grow) {
             res = restWidth * (grow / allRateGrow)
@@ -369,8 +374,10 @@ class Flex {
      * @param remakePos
      */
     createFlowBox(remakePos) {
+
         const {Y, style} = this;
         let posArr = this.getFlatArray(remakePos, style);
+
         return posArr.map((item, it) => {
             const getTop = (posArr.filter((a, b) => b <= it - 1).reduce((a, b) => a + b.max, 0));
             item.lineArray = item.lineArray.map(item => {

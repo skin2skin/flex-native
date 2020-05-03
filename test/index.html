@@ -12,7 +12,7 @@
         }
 
         .wrapper {
-           // width: 500px;
+            width: 500px;
             //height: 456px;
             border: 5px solid #cccccc;
             margin: 10px;
@@ -61,7 +61,7 @@
             -js-display: inline-flex;
             display: inline-flex;
             flex-direction: row;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: center;
             justify-content: center;
             //align-content: baseline;
@@ -86,6 +86,7 @@
 
         .etty > * {
             display: inline-block;
+            -js-flex-shrink: 1;
            // vertical-align: baseline;
         / / width: 10 %;
         }
@@ -97,13 +98,16 @@
             //padding: 10px;
             height: 200px;
             align-items: flex-end;
+            //flex-shrink: 0;
         }
 
         .bo > div {
             width: 100px;
             height: 100px;
+            -js-flex-shrink: 1;
             box-sizing: border-box;
             border: 1px solid #cccccc;
+
         }
 
         button {

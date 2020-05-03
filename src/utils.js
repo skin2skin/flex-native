@@ -214,26 +214,40 @@ export function getOffset(curEle) {
 /**
  * 当div没有高度时重新设置fexDiv的高度
  */
-export function getRealHeight(element, innerHeight, boxSizing) {
+export function getRealHeight(element, innerHeight, boxSizing, isNoWrap) {
     const childNodesList = Array.from(element.childNodes);
     const height = element.getBoundingClientRect().height;
-    childNodesList.forEach(ele => {
-        const _style = getStyle(ele);
-        if (_style.position !== 'absolute' && _style.position !== 'fixed') {
-            ele.style.display = 'block'
+    if(!supportsFlexBox()){
+        childNodesList.forEach(ele => {
+            const _style = getStyle(ele);
+            if (_style.position !== 'absolute' && _style.position !== 'fixed') {
+                ele.style.display = 'block'
+            }
+        });
+        let _height = element.getBoundingClientRect().height;
+        let maxHeight=0;
+        childNodesList.forEach(ele => {
+            const _style = getStyle(ele);
+            if (_style.position !== 'absolute' && _style.position !== 'fixed') {
+                ele.style.display = 'inline-block';
+                if(isNoWrap){
+                    const _maxHeight = ele.getBoundingClientRect().height + parseInt(_style.marginTop) + parseInt(_style.marginBottom);
+                    if(_maxHeight>maxHeight){
+                        maxHeight=_maxHeight;
+                    }
+                }
+            }
+        });
+        if (height !== _height) {
+            console.log(maxHeight)
+            if(isNoWrap){
+                const pStyle=getStyle(element)
+                _height=maxHeight+parseInt(pStyle.borderTopWidth)+parseInt(pStyle.borderBottomWidth)+parseInt(pStyle.paddingTop)+parseInt(pStyle.paddingBottom);
+            }
+            const __height = _height + (boxSizing === 'border-box' ? 0 : innerHeight);
+            element.style['height'] = __height.toFixed(6) + 'px';
+            return _height + 1;
         }
-    });
-    const _height = element.getBoundingClientRect().height;
-    childNodesList.forEach(ele => {
-        const _style = getStyle(ele);
-        if (_style.position !== 'absolute' && _style.position !== 'fixed') {
-            ele.style.display = 'inline-block'
-        }
-    });
-    if (!supportsFlexBox() && height !== _height) {
-        const __height = _height + (boxSizing === 'border-box' ? 0 : innerHeight);
-        element.style['height'] = __height.toFixed(6) + 'px';
-        return _height + 1;
     }
     return height
 }

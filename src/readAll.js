@@ -28,7 +28,7 @@ export function isFlexBox(element) {
 function dealInlineFlex(element) {
     let currentStyleJsDisplay = (element.currentStyle && element.currentStyle['-js-display']);
     const isInlineFlex = currentStyleJsDisplay && currentStyleJsDisplay.includes('inline-flex');
-    if (isInlineFlex) {
+    if (isInlineFlex&&!supportsFlexBox()) {
         let text = element.getAttribute('style') || '';
         if (!text.includes('display')) {
             text += `display: ${currentStyleJsDisplay};`;
@@ -90,14 +90,6 @@ function resetStyle(element) {
 }
 
 /**
- * 判断是否是原始的inline-block元素
- */
-function judgeIsNativeInline(element) {
-    const list = ['input', 'textarea', 'img', 'button', 'select'];
-    return list.includes(element.localName)
-}
-
-/**
  * 查询所有flexbox
  */
 export default function readAll(element) {
@@ -146,7 +138,7 @@ export default function readAll(element) {
                 alignContent: getDefaultStyle(props, 'align-content', 'alignContent') || getDefaultProp('alignContent'),
                 justifyContent: getDefaultStyle(props, 'justify-content', 'justifyContent') || getDefaultProp('justifyContent'), //默认左对齐
                 order: getDefaultStyle(props, 'order', 'order') || getDefaultProp('order'),
-                flexShrink: getDefaultStyle(props, 'flex-shrink', 'flexShrink') || getDefaultProp('flexShrink', props) || getDefaultProp('flexShrink'),
+                flexShrink: props['-js-flex-shrink']||getDefaultStyle(props, 'flex-shrink', 'flexShrink') || getDefaultProp('flexShrink', props) || getDefaultProp('flexShrink'),
                 flexGrow: getDefaultStyle(props, 'flex-grow', 'flexGrow') || getDefaultProp('flexGrow', props) || getDefaultProp('flexGrow')
             }
         };
@@ -180,7 +172,7 @@ export default function readAll(element) {
                     childDetails.props = {
                         alignSelf: getDefaultStyle(_style, 'align-self') || _ele.props.alignItems,
                         order: getDefaultStyle(_style, 'order', 'order') || getDefaultProp('order'),
-                        flexShrink: getDefaultStyle(_style, 'flex-shrink', 'flexShrink') || getDefaultProp('flexShrink', _style) || getDefaultProp('flexShrink'),
+                        flexShrink: _style['-js-flex-shrink']||getDefaultStyle(_style, 'flex-shrink', 'flexShrink') || getDefaultProp('flexShrink', _style) || getDefaultProp('flexShrink'),
                         flexGrow: getDefaultStyle(_style, 'flex-grow', 'flexGrow') || getDefaultProp('flexGrow', _style) || getDefaultProp('flexGrow')
                     }
                 }else{

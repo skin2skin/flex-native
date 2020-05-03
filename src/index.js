@@ -61,7 +61,6 @@ function main(ele = document) {
         observer && observer.disconnect();
         //let time = new Date().getTime();
         const flexBox = [readAll(ele)];
-        //console.log(flexBox)
         //开始设置位置
         render(flexBox);
         //console.log('time',new Date().getTime()-time);
