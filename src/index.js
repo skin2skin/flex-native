@@ -56,21 +56,22 @@ const render = (flexBox) => {
  * 入口函数
  */
 function main(ele = document) {
-    try {
-        isUpdateInner = true;
-        observer && observer.disconnect();
-        //let time = new Date().getTime();
-        const flexBox = [readAll(ele)];
-        //开始设置位置
-        render(flexBox);
-        //console.log('time',new Date().getTime()-time);
-        setTimeout(() => {
-            isUpdateInner = false;
-            observer && observer.observe(document, config);
-        }, 0)
+    isUpdateInner = true;
+    observer && observer.disconnect();
+    //let time = new Date().getTime();
+    const flexBox = [readAll(ele)];
+    //开始设置位置
+    render(flexBox);
+    //console.log('time',new Date().getTime()-time);
+    setTimeout(() => {
+        isUpdateInner = false;
+        observer && observer.observe(document, config);
+    }, 0)
+  /*  try {
+
     }catch(e){
         console.error(e)
-    }
+    }*/
 }
 
 main();

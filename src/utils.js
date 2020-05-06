@@ -219,24 +219,30 @@ export function getRealHeight(element, innerHeight, boxSizing, isNoWrap) {
     const height = element.getBoundingClientRect().height;
     if(!supportsFlexBox()){
         childNodesList.forEach(ele => {
-            const _style = getStyle(ele);
-            if (_style.position !== 'absolute' && _style.position !== 'fixed') {
-                ele.style.display = 'block'
+            if(ele instanceof Element){
+                const _style = getStyle(ele);
+                if (_style.position !== 'absolute' && _style.position !== 'fixed') {
+                    ele.style.display = 'block'
+                }
             }
+
         });
         let _height = element.getBoundingClientRect().height;
         let maxHeight=0;
         childNodesList.forEach(ele => {
-            const _style = getStyle(ele);
-            if (_style.position !== 'absolute' && _style.position !== 'fixed') {
-                ele.style.display = 'inline-block';
-                if(isNoWrap){
-                    const _maxHeight = ele.getBoundingClientRect().height + parseInt(_style.marginTop) + parseInt(_style.marginBottom);
-                    if(_maxHeight>maxHeight){
-                        maxHeight=_maxHeight;
+            if(ele instanceof Element){
+                const _style = getStyle(ele);
+                if (_style.position !== 'absolute' && _style.position !== 'fixed') {
+                    ele.style.display = 'inline-block';
+                    if(isNoWrap){
+                        const _maxHeight = ele.getBoundingClientRect().height + parseInt(_style.marginTop) + parseInt(_style.marginBottom);
+                        if(_maxHeight>maxHeight){
+                            maxHeight=_maxHeight;
+                        }
                     }
                 }
             }
+
         });
         if (height !== _height) {
             console.log(maxHeight)
