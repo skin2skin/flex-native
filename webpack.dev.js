@@ -31,7 +31,7 @@ module.exports = {
     plugins: [
         new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
-            template: './test/index2.html',
+            template: './test/index.html',
             filename: 'index.html',
             hash: true,
             minify: {
