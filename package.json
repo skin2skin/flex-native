@@ -1,6 +1,6 @@
 {
   "name": "flex-native",
-  "version": "1.1.7",
+  "version": "1.2.0",
   "description": "适合ie9+的flex布局、 Flex layout patch for IE9 +",
   "main": "dist/flex.native.min.js",
   "directories": {
@@ -65,7 +65,7 @@
     "ie9 flexlayout",
     "ie9 flex布局"
   ],
-  "files": ["src","dist"],
+  "files": ["dist"],
   "homepage": "https://github.com/robertpanvip/flex-native#readme",
   "dependencies": {
     "core-js": "^3.6.4"
