@@ -58,6 +58,16 @@ function dealInlineFlex(element) {
  */
 function resetStyle(element) {
     const _style = getStyle(element);
+    //如果内容是纯文本节点，那么用font去包裹一下，flex才会生效
+    Array.from(element.childNodes).forEach(childNode=>{
+        if (element.tagName !== 'TITLE' && element.tagName !== 'STYLE' && childNode.nodeName === '#text' && childNode.textContent !== ' ') {
+            const fontDom = document.createElement('font');
+            fontDom.innerText = childNode.textContent;
+            element.insertBefore(fontDom, childNode);
+            element.removeChild(childNode);
+        }
+    })
+   
     if(_style.position !== 'absolute' && _style.position !== 'fixed'){
         element.style.opacity = 0;
     }
@@ -161,7 +171,6 @@ export default function readAll(element) {
             // push the child details to children
             let childDetails = readAll(childNode);
             if (isDisplayFlex) {
-                element instanceof Element && resetStyle(element);
                 //如果父类为flex且自己不是flex的时候
                 if (!isFlexBox(childNode)) {
                     const _style = getStyle(childNode);
