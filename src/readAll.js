@@ -46,7 +46,7 @@ function dealInlineFlex(element) {
         } else {
             text = text.replace(getStyleFromCssText(text).display, 'inline-block')
         }
-        text += '; vertical-align: middle;';
+        text += '; vertical-align: middle;float:unset';
         element.setAttribute('style', text)
 
     }
@@ -56,7 +56,7 @@ function dealInlineFlex(element) {
 /**
  * 重置上一次的渲染
  */
-function resetStyle(element) {
+function resetStyle(element,isFLex) {
     const _style = getStyle(element);
     //如果内容是纯文本节点，那么用font去包裹一下，flex才会生效
     Array.from(element.childNodes).forEach(childNode=>{
@@ -68,10 +68,9 @@ function resetStyle(element) {
         }
     })
    
-    if(_style.position !== 'absolute' && _style.position !== 'fixed'){
+    if(_style.position !== 'absolute' && _style.position !== 'fixed' && isFLex){
         element.style.opacity = 0;
     }
-
     const oriStyleText = getDataSet(element, 'origin');
     if (oriStyleText) {
         const nowStyleText = element.getAttribute('style');
@@ -122,7 +121,7 @@ export default function readAll(element) {
     let childNode;
 
     if (isDisplayFlex) {
-        element instanceof Element && resetStyle(element);
+        element instanceof Element && resetStyle(element,true);
         let alignSelf = 'stretch';
         if (isFlexBox(element.parentNode)) {
             const _props = getStyle(element.parentNode);
@@ -171,6 +170,7 @@ export default function readAll(element) {
             // push the child details to children
             let childDetails = readAll(childNode);
             if (isDisplayFlex) {
+                resetStyle(childNode,false);
                 //如果父类为flex且自己不是flex的时候
                 if (!isFlexBox(childNode)) {
                     const _style = getStyle(childNode);
@@ -191,8 +191,20 @@ export default function readAll(element) {
                 if (!supportsFlexBox()) {
                     const _style = getStyle(childNode);
                     if(_style.position !== 'absolute' && _style.position !== 'fixed'){
-                        childNode.style.display = 'inline-block';
-                        childNode.style.verticalAlign = 'middle';
+                        //为了将style的权限提升到最高
+                        let styleText=childNode.getAttribute('style')||'';
+                        const styleObj=getStyleFromCssText(styleText)
+                        styleObj.display = 'inline-block!important';
+                        styleObj.float='none!important';
+                        styleObj['vertical-align'] = 'middle!important';
+                        Object.entries(styleObj).forEach(([key, value]) => {
+                            styleText += `${key}:${value};`
+                        });
+                        childNode.setAttribute('style',styleText)
+                        /*childNode.style.display = 'inline-block';
+                        childNode.style.float='none';
+                        childNode.style.verticalAlign = 'middle';*/
+
                     }
                 }
             }

@@ -245,7 +245,6 @@ export function getRealHeight(element, innerHeight, boxSizing, isNoWrap) {
 
         });
         if (height !== _height) {
-            console.log(maxHeight)
             if(isNoWrap){
                 const pStyle=getStyle(element)
                 _height=maxHeight+parseInt(pStyle.borderTopWidth)+parseInt(pStyle.borderBottomWidth)+parseInt(pStyle.paddingTop)+parseInt(pStyle.paddingBottom);

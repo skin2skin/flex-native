@@ -56,6 +56,7 @@ const render = (flexBox) => {
  * 入口函数
  */
 function main(ele = document) {
+    console.log('render--')
     isUpdateInner = true;
     observer && observer.disconnect();
     //let time = new Date().getTime();

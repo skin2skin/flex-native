@@ -79,7 +79,7 @@ class Flex {
         };
         this.left = getOffset(element).left;
         this.top = getOffset(element).top;
-        this.height = getRealHeight(element, _innerHeight, boxSizing,flexWrap===FLEX_WRAP.NOWRAP) + _innerHeight;
+        this.height = getRealHeight(element, _innerHeight, boxSizing, flexWrap === FLEX_WRAP.NOWRAP) + _innerHeight;
         this.width = wrapperRect.width;
 
         this.style = style;
@@ -174,14 +174,13 @@ class Flex {
         const remakePos = _remakePos.filter((item) => !item.isFixed);
 
         //是absolute或者fixed布局且是flex布局的div列表
-        const fixedBoxes = _remakePos.filter((item) => item.isFixed && item.isFixed);
+        const fixedBoxes = _remakePos.filter((item) => item.isFixed && item.isFixed && item.isFlex);
 
         //创建流动布局
         const flowBox = this.createFlowBox(remakePos);
 
         //开始布局
         const array = this.startLayout(flowBox);
-
         element.style.opacity = 1;
         element.setAttribute('data-origin', style);
         element.setAttribute('data-style', element.getAttribute('style'));
@@ -192,9 +191,12 @@ class Flex {
             lineArray.forEach(item => {
                 const {element} = item;
                 element.style[getPrefixAndProp('transform')] = createTransform(item);
-                if (item.isFlex) {
+                if(item.isFlex){
                     new Flex(item)
                 }
+                this.renderLoop(item.children);
+
+                element.style.opacity = 1;
                 element.setAttribute('data-origin', item.style);
                 element.setAttribute('data-style', element.getAttribute('style'));
             })
@@ -204,6 +206,20 @@ class Flex {
             new Flex(item)
         })
 
+    }
+
+    /**
+     *递归循环渲染子节点
+     */
+    renderLoop(children) {
+        children.forEach(item => {
+            //说明是flexBox
+            if (item.isFlex) {
+                new Flex(item);//设置每个item的位置
+            } else {
+                this.renderLoop(item.children)
+            }
+        })
     }
 
     /**
@@ -438,7 +454,7 @@ class Flex {
             return al + item.max
         }, 0);
 
-        const stretchDefaultDeal=()=>{
+        const stretchDefaultDeal = () => {
             arr = arr.map((item, index) => {
                 const restHeight = this[H] - allHeight;
                 const marginTop = restHeight / arr.length;
