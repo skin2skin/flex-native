@@ -58,16 +58,19 @@ function dealInlineFlex(element) {
  */
 function resetStyle(element,isFLex) {
     const _style = getStyle(element);
-    //如果内容是纯文本节点，那么用font去包裹一下，flex才会生效
-    Array.from(element.childNodes).forEach(childNode=>{
-        if (element.tagName !== 'TITLE' && element.tagName !== 'STYLE' && childNode.nodeName === '#text' && childNode.textContent !== ' ') {
-            const fontDom = document.createElement('font');
-            fontDom.innerText = childNode.textContent;
-            element.insertBefore(fontDom, childNode);
-            element.removeChild(childNode);
-        }
-    })
-   
+    if(isFLex){
+        //如果内容是纯文本节点，那么用font去包裹一下，flex才会生效
+        Array.from(element.childNodes).forEach(childNode=>{
+            if (element.tagName !== 'TITLE' && element.tagName !== 'STYLE' && childNode.nodeName === '#text' && childNode.textContent !== ' ') {
+                const fontDom = document.createElement('font');
+                fontDom.innerText = childNode.textContent;
+                element.insertBefore(fontDom, childNode);
+                element.removeChild(childNode);
+            }
+        })
+    }
+
+
     if(_style.position !== 'absolute' && _style.position !== 'fixed' && isFLex){
         element.style.opacity = 0;
     }
