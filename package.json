@@ -65,7 +65,7 @@
     "ie9 flexlayout",
     "ie9 flex布局"
   ],
-  "files": ["dist"],
+  "files": ["dist","README.md","README-zh_CN.md"],
   "homepage": "https://github.com/robertpanvip/flex-native#readme",
   "dependencies": {
     "core-js": "^3.6.4"
